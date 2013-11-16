@@ -156,11 +156,13 @@ int main(int argc, char *argv[])
                     free(command);
                 command = strdup(optarg);
                 break;
+            #if 0
             case 'a':
                 if (address)
                     free(address);
                 address = strdup(optarg);
                 break;
+            #endif
         }
     }
 
