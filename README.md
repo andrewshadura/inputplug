@@ -81,7 +81,7 @@ Probably, there are some.
 
 # SEE ALSO
 
-[xinput(1)](http://man.he.net/man1/xinput)
+[xinput(1)](http://manpages.debian.org/cgi-bin/man.cgi?query=xinput)
 
 # COPYRIGHT
 

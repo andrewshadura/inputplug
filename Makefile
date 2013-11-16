@@ -12,4 +12,5 @@ inputplug.md: inputplug.c
 	pod2markdown < $< | sed -e 's, - , — ,g' \
 							-e 's,^- ,* ,g'  \
 							-e '/=cut/,$$d'  \
+							-e 's,man.he.net/man./,manpages.debian.org/cgi-bin/man.cgi?query=,g' \
 							-e 's,\[\(<.*@.*>\)\](.*),\1,' > $@
