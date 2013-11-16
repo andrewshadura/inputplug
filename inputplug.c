@@ -163,6 +163,9 @@ int main(int argc, char *argv[])
                 address = strdup(optarg);
                 break;
             #endif
+            default:
+                fprintf(stderr, "Usage: %s [-v] [-n] -c command-prefix\n", argv[0]);
+                exit(EXIT_FAILURE);
         }
     }
 
