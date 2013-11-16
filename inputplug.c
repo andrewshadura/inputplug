@@ -1,13 +1,17 @@
+#define _BSD_SOURCE
 #define _GNU_SOURCE
 #include <assert.h>
 #include <unistd.h>
 #include <stdio.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include <signal.h>
 #include <limits.h>
 #include <search.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/extensions/XInput.h>
@@ -131,6 +135,33 @@ char * getenv_dup(const char * name) {
     }
 }
 
+pid_t daemonise(void) {
+    pid_t pid;
+    switch (pid = fork()) {
+        case -1:           /* failure */
+            exit(EXIT_FAILURE);
+        case 0:            /* child */
+            break;
+        default:           /* parent */
+            return pid;
+    }
+
+    umask(0);
+
+    if (setsid() < 0) {
+        exit(EXIT_FAILURE);
+    }
+
+    if (chdir("/") < 0) {
+        exit(EXIT_FAILURE);
+    }
+
+    close(STDIN_FILENO);
+    close(STDOUT_FILENO);
+    close(STDERR_FILENO);
+    return 0;
+}
+
 int main(int argc, char *argv[])
 {
     XIEventMask mask;
@@ -190,6 +221,14 @@ int main(int argc, char *argv[])
     XSync(display, False);
 
     free(mask.mask);
+
+    pid_t pid;
+    if ((pid = daemonise()) != 0) {
+        if (verbose) {
+            fprintf(stderr, "Daemonised as %ju.\n", (uintmax_t)pid);
+        }
+        goto out;
+    }
 
     /* avoid zombies when spawning processes */
     struct sigaction sigchld_action = {
