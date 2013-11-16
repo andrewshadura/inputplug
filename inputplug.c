@@ -212,6 +212,18 @@ int main(int argc, char *argv[])
         goto out;
     }
 
+    XCloseDisplay(display);
+
+    pid_t pid;
+    if ((pid = daemonise()) != 0) {
+        if (verbose) {
+            fprintf(stderr, "Daemonised as %ju.\n", (uintmax_t)pid);
+        }
+        exit(EXIT_SUCCESS);
+    }
+
+    display = XOpenDisplay(NULL);
+
     mask.deviceid = XIAllDevices;
     mask.mask_len = XIMaskLen(XI_LASTEVENT);
     mask.mask = calloc(mask.mask_len, sizeof(char));
@@ -220,14 +232,6 @@ int main(int argc, char *argv[])
     XSync(display, False);
 
     free(mask.mask);
-
-    pid_t pid;
-    if ((pid = daemonise()) != 0) {
-        if (verbose) {
-            fprintf(stderr, "Daemonised as %ju.\n", (uintmax_t)pid);
-        }
-        goto out;
-    }
 
     /* avoid zombies when spawning processes */
     struct sigaction sigchld_action = {
