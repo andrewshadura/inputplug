@@ -154,7 +154,7 @@ int main(int argc, char *argv[])
             case 'c':
                 if (command)
                     free(command);
-                command = strdup(optarg);
+                command = realpath(optarg, NULL);
                 break;
             #if 0
             case 'a':
