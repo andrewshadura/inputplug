@@ -9,7 +9,6 @@
 #include <string.h>
 #include <signal.h>
 #include <limits.h>
-#include <search.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <X11/Xlib.h>
