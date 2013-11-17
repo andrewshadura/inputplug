@@ -27,7 +27,7 @@ struct pair {
 bool verbose = false;
 bool no_act = false;
 
-const struct pair * map(int key, const struct pair * table, bool strict) {
+static const struct pair * map(int key, const struct pair * table, bool strict) {
     if (!table) return NULL;
     while (table->value) {
         if ((!strict && (table->key & key)) || (table->key == key)) {
@@ -125,7 +125,7 @@ static void parse_event(XIHierarchyEvent *event)
     }
 }
 
-char * getenv_dup(const char * name) {
+static char * getenv_dup(const char * name) {
     const char * value = getenv(name);
     if (value != NULL) {
         return strdup(value);
@@ -134,7 +134,7 @@ char * getenv_dup(const char * name) {
     }
 }
 
-pid_t daemonise(void) {
+static pid_t daemonise(void) {
     pid_t pid;
     switch (pid = fork()) {
         case -1:           /* failure */
@@ -262,125 +262,3 @@ out:
 
     return EXIT_SUCCESS;
 }
-
-/*
-=pod
-
-=head1 NAME
-
-inputplug - XInput event monitor
-
-=head1 SYNOPSIS
-
-B<inputplug> [B<-v>] [B<-n>] B<-c> I<command-prefix>
-
-=head1 DESCRIPTION
-
-B<inputplug> is a daemon which connects to a running X server
-and monitors its XInput hierarchy change events. Such events arrive
-when a device being attached or removed, enabled or disabled etc.
-
-When a hierarchy change happens, B<inputplug> parses the event notification
-structure, and calls the command specified by I<command-prefix>. The command
-receives three arguments:
-
-=over
-
-=item I<command-prefix> I<event-type> I<device-id> I<device-type>
-
-=back
-
-Event type may be one of the following:
-
-=over
-
-=item * I<XIMasterAdded>
-
-=item * I<XIMasterRemoved>
-
-=item * I<XISlaveAdded>
-
-=item * I<XISlaveRemoved>
-
-=item * I<XISlaveAttached>
-
-=item * I<XISlaveDetached>
-
-=item * I<XIDeviceEnabled>
-
-=item * I<XIDeviceDisabled>
-
-=back
-
-Device type may be any of those:
-
-=over
-
-=item * I<XIMasterPointer>
-
-=item * I<XIMasterKeyboard>
-
-=item * I<XISlavePointer>
-
-=item * I<XISlaveKeyboard>
-
-=item * I<XIFloatingSlave>
-
-=back
-
-Device identifier is an integer.
-
-=head1 OPTIONS
-
-A summary of options is included below.
-
-=over
-
-=item B<-v>
-
-Be a bit more verbose.
-
-=item B<-n>
-
-Start up, monitor events, but don't actually run anything.
-With verbose more enabled, would print the actual command it'd
-run. Currently useless, as B<inputplug> detaches from the terminal
-immediately after start.
-
-=item B<-c> I<command-prefix>
-
-Command prefix to run. Unfortunately, currently this is passed to
-L<execvp(3)> directly, so spaces aren't allowed. This is subject to
-change in future.
-
-=back
-
-=head1 ENVIRONMENT
-
-=over
-
-=item I<DISPLAY>
-
-X11 display to connect to.
-
-=back
-
-=head1 BUGS
-
-Probably, there are some.
-
-=head1 SEE ALSO
-
-L<xinput(1)>
-
-=head1 COPYRIGHT
-
-Copyright (C) 2013, Andrew Shadura.
-
-Licensed as MIT/X11.
-
-=head1 AUTHOR
-
-Andrew Shadura L<< <andrewsh@debian.org> >>
-=cut
-*/
