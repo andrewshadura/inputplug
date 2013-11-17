@@ -1,9 +1,13 @@
 inputplug
 =========
 
-Inputplug is a very simple daemon monitoring XInput events and running
+inputplug is a very simple daemon monitoring XInput events and running
 scripts on hierarchy changes (such as device attach, remove, enable or
 disable).
+
+To build the project, it's best to use [mk-configure(7)](http://github.com/cheusov/mk-configure),
+a build system based on [bmake(1)](http://www.crufty.net/help/sjg/bmake.html). However, GNU Makefile
+is provided for convenience.
 
 * * *
 
