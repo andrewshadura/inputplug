@@ -173,7 +173,8 @@ int main(int argc, char *argv[])
     char * address = getenv_dup("WMII_ADDRESS");
     #endif
 
-    while ((opt = getopt(argc, argv, /* "a:" */ "vnc:")) != -1) {
+    while (((opt = getopt(argc, argv, /* "a:" */ "vnc:")) != -1) ||
+           ((opt == -1) && (command == NULL))) {
         switch (opt) {
             case 'v':
                 verbose = true;
