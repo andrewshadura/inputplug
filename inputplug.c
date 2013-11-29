@@ -247,10 +247,17 @@ int main(int argc, char *argv[])
 
     #if HAVE_HEADER_IXP_H
     if (address) {
-        if (verbose) {
-            fprintf(stderr, "Connecting to 9P server at %s.\n", address);
+        if (*address) {
+            if (verbose) {
+                fprintf(stderr, "Connecting to 9P server at %s.\n", address);
+            }
+            client = ixp_mount(address);
+        } else {
+            if (verbose) {
+                fprintf(stderr, "Connecting to wmii 9P server.\n");
+            }
+            client = ixp_nsmount("wmii");
         }
-        client = ixp_mount(address);
         if (client == NULL) {
             fprintf(stderr, "Failed to connect to 9P server: %s\n", ixp_errbuf());
             free(address);
@@ -289,7 +296,11 @@ int main(int argc, char *argv[])
 
     #if HAVE_HEADER_IXP_H
     if (address) {
-        client = ixp_mount(address);
+        if (*address) {
+            client = ixp_mount(address);
+        } else {
+            client = ixp_nsmount("wmii");
+        }
         if (client != NULL) {
             fid = ixp_open(client, path, P9_OWRITE);
         }
