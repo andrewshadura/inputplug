@@ -16,6 +16,10 @@
 #include <X11/extensions/XInput.h>
 #include <X11/extensions/XInput2.h>
 
+#if HAVE_HEADER_IXP_H
+#include <ixp.h>
+#endif
+
 struct pair {
     int key;
     char * value;
@@ -60,6 +64,22 @@ const struct pair changes[] = {
     T_END
 };
 
+#if HAVE_HEADER_IXP_H
+static IxpCFid *fid = NULL;
+
+static void postevent(const char *command, char *const args[])
+{
+    assert(command != NULL);
+    assert(args != NULL);
+
+    if (fid != NULL) {
+        char buffer[256];
+        snprintf(buffer, sizeof(buffer), "%s %s %s\n", args[1], args[2], args[3]);
+        ixp_write(fid, buffer, strlen(buffer));
+    }
+}
+#endif
+
 static void execute(const char *command, char *const args[])
 {
     assert(command != NULL);
@@ -91,7 +111,7 @@ static void execute(const char *command, char *const args[])
 #define EXPAND_STRINGIFY(x) STRINGIFY(x)
 #define UINT_MAX_STRING EXPAND_STRINGIFY(UINT_MAX)
 
-char * command = NULL;
+static char * command = NULL;
 
 static void parse_event(XIHierarchyEvent *event)
 {
@@ -116,6 +136,9 @@ static void parse_event(XIHierarchyEvent *event)
                      NULL
                 };
                 execute(command, args);
+                #if HAVE_HEADER_IXP_H
+                postevent(command, args);
+                #endif
 
                 flags -= change->key;
             } else {
@@ -166,14 +189,16 @@ int main(int argc, char *argv[])
     XIEventMask mask;
     int xi_opcode;
     int event, error;
-
     int opt;
 
-    #if 0
-    char * address = getenv_dup("WMII_ADDRESS");
+    #if HAVE_HEADER_IXP_H
+    IxpClient *client;
     #endif
 
-    while (((opt = getopt(argc, argv, /* "a:" */ "vnc:")) != -1) ||
+    char * address = getenv_dup("WMII_ADDRESS");
+    char * path = strdup("/event");
+
+    while (((opt = getopt(argc, argv, "a:f:vnc:")) != -1) ||
            ((opt == -1) && (command == NULL))) {
         switch (opt) {
             case 'v':
@@ -187,15 +212,20 @@ int main(int argc, char *argv[])
                     free(command);
                 command = realpath(optarg, NULL);
                 break;
-            #if 0
+            #if HAVE_HEADER_IXP_H
             case 'a':
                 if (address)
                     free(address);
                 address = strdup(optarg);
                 break;
+            case 'f':
+                if (path)
+                    free(path);
+                path = strdup(optarg);
+                break;
             #endif
             default:
-                fprintf(stderr, "Usage: %s [-v] [-n] -c command-prefix\n", argv[0]);
+                fprintf(stderr, "Usage: %s [-a address] [-f path] [-v] [-n] -c command-prefix\n", argv[0]);
                 exit(EXIT_FAILURE);
         }
     }
@@ -214,6 +244,22 @@ int main(int argc, char *argv[])
     }
 
     XCloseDisplay(display);
+
+    #if HAVE_HEADER_IXP_H
+    if (address) {
+        if (verbose) {
+            fprintf(stderr, "Connecting to 9P server at %s.\n", address);
+        }
+        client = ixp_mount(address);
+        if (client == NULL) {
+            fprintf(stderr, "Failed to connect to 9P server: %s\n", ixp_errbuf());
+            free(address);
+            address = NULL;
+        } else {
+            ixp_unmount(client);
+        }
+    }
+    #endif
 
     pid_t pid;
     if ((pid = daemonise()) != 0) {
@@ -240,6 +286,15 @@ int main(int argc, char *argv[])
         .sa_flags = SA_NOCLDWAIT
     };
     sigaction(SIGCHLD, &sigchld_action, NULL);
+
+    #if HAVE_HEADER_IXP_H
+    if (address) {
+        client = ixp_mount(address);
+        if (client != NULL) {
+            fid = ixp_open(client, path, P9_OWRITE);
+        }
+    }
+    #endif
 
     while(1) {
         XEvent ev;

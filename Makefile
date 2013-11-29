@@ -11,6 +11,9 @@ CLEANFILES      = ${MAN}
 
 PKG_CONFIG_DEPS = x11 xext xi
 
+MKC_CHECK_HEADERS  = ixp.h
+MKC_CHECK_FUNCLIBS = ixp_mount:ixp
+
 WARNS           = 2
 
 VERSION         = 0.1
