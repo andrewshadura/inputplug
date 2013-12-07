@@ -17,7 +17,7 @@ inputplug — XInput event monitor
 
 # SYNOPSIS
 
-__inputplug__ \[__\-v__\] \[__\-n__\] __\-c__ _command-prefix_
+__inputplug__ \[__\-a__ _address_\] \[__\-f__ _path_\] \[__\-v__\] \[__\-n__\] __\-c__ _command-prefix_
 
 # DESCRIPTION
 
@@ -52,6 +52,9 @@ Device type may be any of those:
 
 Device identifier is an integer.
 
+Also, if compiled with __libixp__, inputplug can post events to the __wmii__ event file.
+To enable __wmii__ support, the address of its __9P__ server needs to be specified.
+
 # OPTIONS
 
 A summary of options is included below.
@@ -70,14 +73,29 @@ A summary of options is included below.
 * __\-c__ _command-prefix_
 
     Command prefix to run. Unfortunately, currently this is passed to
-    [execvp(3)](http://man.he.net/man3/execvp) directly, so spaces aren't allowed. This is subject to
+    [execvp(3)](http://manpages.debian.org/cgi-bin/man.cgi?query=execvp) directly, so spaces aren't allowed. This is subject to
     change in future.
+
+* __\-a__ _address_
+
+    The address at which to connect to __wmii__. The address takes the
+    form _<protocol>_!_<address>_. If an empty string is passed,
+    __inputplug__ tries to find __wmii__ automatically.
+
+* __\-f__ _path_
+
+    Path to the event file within __9P__ filesystem served by __wmii__.
+    The default is __/event__.
 
 # ENVIRONMENT
 
 * _DISPLAY_
 
     X11 display to connect to.
+
+* _WMII\_ADDRESS_
+
+    __wmii__ address.
 
 # BUGS
 
