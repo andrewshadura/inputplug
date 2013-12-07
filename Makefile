@@ -28,4 +28,4 @@ VERSION         = 0.1
 
 .include <mkc.mk>
 
-POD2MAN_FLAGS += -d 2013-11-17
+POD2MAN_FLAGS += -d 2013-12-07

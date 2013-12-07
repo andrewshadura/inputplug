@@ -4,7 +4,7 @@ inputplug - XInput event monitor
 
 =head1 SYNOPSIS
 
-B<inputplug> [B<-v>] [B<-n>] B<-c> I<command-prefix>
+B<inputplug> [B<-a> I<address>] [B<-f> I<path>] [B<-v>] [B<-n>] B<-c> I<command-prefix>
 
 =head1 DESCRIPTION
 
@@ -62,6 +62,9 @@ Device type may be any of those:
 
 Device identifier is an integer.
 
+Also, if compiled with B<libixp>, inputplug can post events to the B<wmii> event file.
+To enable B<wmii> support, the address of its B<9P> server needs to be specified.
+
 =head1 OPTIONS
 
 A summary of options is included below.
@@ -85,6 +88,17 @@ Command prefix to run. Unfortunately, currently this is passed to
 L<execvp(3)> directly, so spaces aren't allowed. This is subject to
 change in future.
 
+=item B<-a> I<address>
+
+The address at which to connect to B<wmii>. The address takes the
+form I<< <protocol> >>!I<< <address> >>. If an empty string is passed,
+B<inputplug> tries to find B<wmii> automatically.
+
+=item B<-f> I<path>
+
+Path to the event file within B<9P> filesystem served by B<wmii>.
+The default is B</event>.
+
 =back
 
 =head1 ENVIRONMENT
@@ -94,6 +108,10 @@ change in future.
 =item I<DISPLAY>
 
 X11 display to connect to.
+
+=item I<WMII_ADDRESS>
+
+B<wmii> address.
 
 =back
 
