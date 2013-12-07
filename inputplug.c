@@ -73,9 +73,7 @@ static void postevent(const char *command, char *const args[])
     assert(args != NULL);
 
     if (fid != NULL) {
-        char buffer[256];
-        snprintf(buffer, sizeof(buffer), "%s %s %s\n", args[1], args[2], args[3]);
-        ixp_write(fid, buffer, strlen(buffer));
+        ixp_print(fid, "%s %s %s\n", args[1], args[2], args[3]);
     }
 }
 #endif
