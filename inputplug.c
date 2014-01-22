@@ -2,6 +2,7 @@
 #define _GNU_SOURCE
 #include <assert.h>
 #include <unistd.h>
+#include <errno.h>
 #include <stdio.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -18,6 +19,27 @@
 
 #if HAVE_HEADER_IXP_H
 #include <ixp.h>
+#define IXP_GETOPT "a:f:"
+#else
+#define IXP_GETOPT
+#endif
+
+#if HAVE_HEADER_BSD_LIBUTIL_H
+#include <bsd/libutil.h>
+#else
+#if HAVE_HEADER_LIBUTIL_H
+#include <libutil.h>
+#else
+#ifdef HAVE_PIDFILE
+#undef HAVE_PIDFILE
+#endif
+#endif
+#endif
+
+#ifdef HAVE_PIDFILE
+#define PIDFILE_GETOPT "p:"
+#else
+#define PIDFILE_GETOPT
 #endif
 
 struct pair {
@@ -155,10 +177,15 @@ static char * getenv_dup(const char * name) {
     }
 }
 
+#ifdef HAVE_PIDFILE
+struct pidfh *pfh = NULL;
+#endif
+
 static pid_t daemonise(void) {
     pid_t pid;
     switch (pid = fork()) {
         case -1:           /* failure */
+            pidfile_remove(pfh);
             exit(EXIT_FAILURE);
         case 0:            /* child */
             break;
@@ -169,11 +196,11 @@ static pid_t daemonise(void) {
     umask(0);
 
     if (setsid() < 0) {
-        exit(EXIT_FAILURE);
+        perror("setsid");
     }
 
     if (chdir("/") < 0) {
-        exit(EXIT_FAILURE);
+        perror("chdir");
     }
 
     close(STDIN_FILENO);
@@ -195,8 +222,9 @@ int main(int argc, char *argv[])
 
     char * address = getenv_dup("WMII_ADDRESS");
     char * path = strdup("/event");
+    char * pidfile = NULL;
 
-    while (((opt = getopt(argc, argv, "a:f:vnc:")) != -1) ||
+    while (((opt = getopt(argc, argv, IXP_GETOPT "vhnc:" PIDFILE_GETOPT)) != -1) ||
            ((opt == -1) && (command == NULL))) {
         switch (opt) {
             case 'v':
@@ -222,9 +250,23 @@ int main(int argc, char *argv[])
                 path = strdup(optarg);
                 break;
             #endif
+            #ifdef HAVE_PIDFILE
+            case 'p':
+                if (pidfile)
+                    free(pidfile);
+                pidfile = strdup(optarg);
+                break;
+            #endif
             default:
-                fprintf(stderr, "Usage: %s [-a address] [-f path] [-v] [-n] -c command-prefix\n", argv[0]);
-                exit(EXIT_FAILURE);
+                fprintf(stderr, "Usage: %s "
+                #ifdef HAVE_HEADER_IXP_H
+                "[-a address] [-f path] "
+                #endif
+                #ifdef HAVE_PIDFILE
+                    "[-p pidfile] "
+                #endif
+                "[-v] [-n] -c command-prefix\n", argv[0]);
+                exit(opt == 'h' ? EXIT_SUCCESS : EXIT_FAILURE);
         }
     }
 
@@ -266,12 +308,28 @@ int main(int argc, char *argv[])
     }
     #endif
 
+    if (pidfile) {
+        pid_t otherpid;
+        pfh = pidfile_open(pidfile, 0600, &otherpid);
+        if (pfh == NULL) {
+            if (errno == EEXIST) {
+                fprintf(stderr, "Already running as %ju.\n", (uintmax_t)otherpid);
+                exit(EXIT_FAILURE);
+            }
+            fprintf(stderr, "Can't open or create pidfile.\n");
+        }
+    }
+
     pid_t pid;
     if ((pid = daemonise()) != 0) {
         if (verbose) {
             fprintf(stderr, "Daemonised as %ju.\n", (uintmax_t)pid);
         }
         exit(EXIT_SUCCESS);
+    }
+
+    if (pidfile && pfh) {
+        pidfile_write(pfh);
     }
 
     display = XOpenDisplay(NULL);
