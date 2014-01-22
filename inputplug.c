@@ -288,7 +288,9 @@ int main(int argc, char *argv[])
     /* avoid zombies when spawning processes */
     struct sigaction sigchld_action = {
         .sa_handler = SIG_DFL,
+#ifdef SA_NOCLDWAIT
         .sa_flags = SA_NOCLDWAIT
+#endif
     };
     sigaction(SIGCHLD, &sigchld_action, NULL);
 
