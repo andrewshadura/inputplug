@@ -146,6 +146,7 @@ static void parse_event(XIHierarchyEvent *event)
     }
 }
 
+#if HAVE_HEADER_IXP_H
 static char * getenv_dup(const char * name) {
     const char * value = getenv(name);
     if (value != NULL) {
@@ -154,6 +155,7 @@ static char * getenv_dup(const char * name) {
         return NULL;
     }
 }
+#endif
 
 static pid_t daemonise(void) {
     pid_t pid;
@@ -191,10 +193,10 @@ int main(int argc, char *argv[])
 
     #if HAVE_HEADER_IXP_H
     IxpClient *client;
-    #endif
 
     char * address = getenv_dup("WMII_ADDRESS");
     char * path = strdup("/event");
+    #endif
 
     while (((opt = getopt(argc, argv, "a:f:vnc:")) != -1) ||
            ((opt == -1) && (command == NULL))) {
