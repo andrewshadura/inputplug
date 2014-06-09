@@ -187,7 +187,9 @@ static pid_t daemonise(void) {
     pid_t pid;
     switch (pid = fork()) {
         case -1:           /* failure */
+#ifdef HAVE_PIDFILE
             pidfile_remove(pfh);
+#endif
             exit(EXIT_FAILURE);
         case 0:            /* child */
             break;
@@ -224,6 +226,8 @@ int main(int argc, char *argv[])
 
     char * address = getenv_dup("WMII_ADDRESS");
     char * path = strdup("/event");
+    #endif
+    #ifdef HAVE_PIDFILE
     char * pidfile = NULL;
     #endif
 
@@ -315,6 +319,7 @@ int main(int argc, char *argv[])
     }
     #endif
 
+    #ifdef HAVE_PIDFILE
     if (pidfile) {
         pid_t otherpid;
         pfh = pidfile_open(pidfile, 0600, &otherpid);
@@ -326,6 +331,7 @@ int main(int argc, char *argv[])
             fprintf(stderr, "Can't open or create pidfile.\n");
         }
     }
+    #endif
 
     if (!foreground) {
         pid_t pid;
@@ -338,9 +344,11 @@ int main(int argc, char *argv[])
         exit(EXIT_SUCCESS);
     }
 
+    #ifdef HAVE_PIDFILE
     if (pidfile && pfh) {
         pidfile_write(pfh);
     }
+    #endif
 
     display = XOpenDisplay(NULL);
 
