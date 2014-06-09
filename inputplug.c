@@ -168,6 +168,7 @@ static void parse_event(XIHierarchyEvent *event)
     }
 }
 
+#if HAVE_HEADER_IXP_H
 static char * getenv_dup(const char * name) {
     const char * value = getenv(name);
     if (value != NULL) {
@@ -176,6 +177,7 @@ static char * getenv_dup(const char * name) {
         return NULL;
     }
 }
+#endif
 
 #ifdef HAVE_PIDFILE
 struct pidfh *pfh = NULL;
@@ -215,6 +217,7 @@ int main(int argc, char *argv[])
     int xi_opcode;
     int event, error;
     int opt;
+    bool foreground = false;
 
     #if HAVE_HEADER_IXP_H
     IxpClient *client;
@@ -223,8 +226,9 @@ int main(int argc, char *argv[])
     char * address = getenv_dup("WMII_ADDRESS");
     char * path = strdup("/event");
     char * pidfile = NULL;
+    #endif
 
-    while (((opt = getopt(argc, argv, IXP_GETOPT "vhnc:" PIDFILE_GETOPT)) != -1) ||
+    while (((opt = getopt(argc, argv, IXP_GETOPT "vhndc:" PIDFILE_GETOPT)) != -1) ||
            ((opt == -1) && (command == NULL))) {
         switch (opt) {
             case 'v':
@@ -232,6 +236,10 @@ int main(int argc, char *argv[])
                 break;
             case 'n':
                 no_act = true;
+                foreground = true;
+                break;
+            case 'd':
+                foreground = true;
                 break;
             case 'c':
                 if (command)
@@ -265,7 +273,7 @@ int main(int argc, char *argv[])
                 #ifdef HAVE_PIDFILE
                     "[-p pidfile] "
                 #endif
-                "[-v] [-n] -c command-prefix\n", argv[0]);
+                "[-v] [-n] [-d] -c command-prefix\n", argv[0]);
                 exit(opt == 'h' ? EXIT_SUCCESS : EXIT_FAILURE);
         }
     }
@@ -320,10 +328,13 @@ int main(int argc, char *argv[])
         }
     }
 
-    pid_t pid;
-    if ((pid = daemonise()) != 0) {
-        if (verbose) {
-            fprintf(stderr, "Daemonised as %ju.\n", (uintmax_t)pid);
+    if (!foreground) {
+        pid_t pid;
+        if ((pid = daemonise()) != 0) {
+            if (verbose) {
+                fprintf(stderr, "Daemonised as %ju.\n", (uintmax_t)pid);
+            }
+            exit(EXIT_SUCCESS);
         }
         exit(EXIT_SUCCESS);
     }
