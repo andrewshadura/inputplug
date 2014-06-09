@@ -190,6 +190,7 @@ int main(int argc, char *argv[])
     int xi_opcode;
     int event, error;
     int opt;
+    bool foreground = false;
 
     #if HAVE_HEADER_IXP_H
     IxpClient *client;
@@ -198,7 +199,7 @@ int main(int argc, char *argv[])
     char * path = strdup("/event");
     #endif
 
-    while (((opt = getopt(argc, argv, "a:f:vnc:")) != -1) ||
+    while (((opt = getopt(argc, argv, "a:f:vndc:")) != -1) ||
            ((opt == -1) && (command == NULL))) {
         switch (opt) {
             case 'v':
@@ -206,6 +207,10 @@ int main(int argc, char *argv[])
                 break;
             case 'n':
                 no_act = true;
+                foreground = true;
+                break;
+            case 'd':
+                foreground = true;
                 break;
             case 'c':
                 if (command)
@@ -268,12 +273,14 @@ int main(int argc, char *argv[])
     }
     #endif
 
-    pid_t pid;
-    if ((pid = daemonise()) != 0) {
-        if (verbose) {
-            fprintf(stderr, "Daemonised as %ju.\n", (uintmax_t)pid);
+    if (!foreground) {
+        pid_t pid;
+        if ((pid = daemonise()) != 0) {
+            if (verbose) {
+                fprintf(stderr, "Daemonised as %ju.\n", (uintmax_t)pid);
+            }
+            exit(EXIT_SUCCESS);
         }
-        exit(EXIT_SUCCESS);
     }
 
     display = XOpenDisplay(NULL);
