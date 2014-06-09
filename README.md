@@ -17,7 +17,7 @@ inputplug — XInput event monitor
 
 # SYNOPSIS
 
-__inputplug__ \[__\-a__ _address_\] \[__\-f__ _path_\] \[__\-v__\] \[__\-n__\] __\-c__ _command-prefix_
+__inputplug__ \[__\-a__ _address_\] \[__\-f__ _path_\] \[__\-v__\] \[__\-n__\] \[__\-d__\] __\-c__ _command-prefix_
 
 # DESCRIPTION
 
@@ -67,8 +67,11 @@ A summary of options is included below.
 
     Start up, monitor events, but don't actually run anything.
     With verbose more enabled, would print the actual command it'd
-    run. Currently useless, as __inputplug__ detaches from the terminal
-    immediately after start.
+    run. This implies __\-d__.
+
+* __\-d__
+
+    Don't daemonize. Run in the foreground.
 
 * __\-c__ _command-prefix_
 
