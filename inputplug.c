@@ -159,6 +159,22 @@ static int handle_device(int id, int type, int flags, char *name)
     return -1;
 }
 
+static char *get_device_name(Display *display, unsigned long deviceid)
+{
+        XDeviceInfo *info;
+        int num_devices;
+        char *name = NULL;
+        info = XListInputDevices(display, &num_devices);
+        for (int i=0; i < num_devices; i++) {
+            if (info[i].id == deviceid) {
+                name = strdup(info[i].name);
+                break;
+            }
+        }
+        XFreeDeviceList(info);
+        return name;
+}
+
 static void parse_event(XIHierarchyEvent *event)
 {
     int i;
@@ -168,8 +184,11 @@ static void parse_event(XIHierarchyEvent *event)
         int j = 16;
         while (flags && j) {
             int ret;
+            char *name = get_device_name(event->display, event->info[i].deviceid);
             j--;
-            ret = handle_device(event->info[i].deviceid, event->info[i].use, flags, NULL);
+            ret = handle_device(event->info[i].deviceid, event->info[i].use, flags,
+                                name);
+            free(name);
             if (ret == -1) {
                 break;
             }
