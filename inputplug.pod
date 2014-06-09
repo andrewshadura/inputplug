@@ -18,7 +18,7 @@ receives three arguments:
 
 =over
 
-=item I<command-prefix> I<event-type> I<device-id> I<device-type>
+=item I<command-prefix> I<event-type> I<device-id> I<device-type> I<device-name>
 
 =back
 
@@ -60,7 +60,8 @@ Device type may be any of those:
 
 =back
 
-Device identifier is an integer.
+Device identifier is an integer. Beware that the device name is likely
+to contain spaces.
 
 Also, if compiled with B<libixp>, inputplug can post events to the B<wmii> event file.
 To enable B<wmii> support, the address of its B<9P> server needs to be specified.

@@ -133,7 +133,7 @@ static void execute(const char *command, char *const args[])
 
 static char * command = NULL;
 
-static int handle_device(int id, int type, int flags)
+static int handle_device(int id, int type, int flags, char *name)
 {
     const struct pair * use = map(type, device_types, true);
     const struct pair * change = map(flags, changes, false);
@@ -146,6 +146,7 @@ static int handle_device(int id, int type, int flags)
             change->value,
             deviceid,
             use ? use->value : "",
+            name ? name : "",
             NULL
         };
         execute(command, args);
@@ -168,7 +169,7 @@ static void parse_event(XIHierarchyEvent *event)
         while (flags && j) {
             int ret;
             j--;
-            ret = handle_device(event->info[i].deviceid, event->info[i].use, flags);
+            ret = handle_device(event->info[i].deviceid, event->info[i].use, flags, NULL);
             if (ret == -1) {
                 break;
             }
@@ -372,12 +373,12 @@ int main(int argc, char *argv[])
             switch (info[i].use) {
             case XIMasterPointer:
             case XIMasterKeyboard:
-                handle_device(info[i].id, info[i].use, XIMasterAdded);
+                handle_device(info[i].id, info[i].use, XIMasterAdded, info[i].name);
                 break;
             case XISlavePointer:
             case XISlaveKeyboard:
-                handle_device(info[i].id, info[i].use, XISlaveAdded);
-                handle_device(info[i].id, info[i].use, XIDeviceEnabled);
+                handle_device(info[i].id, info[i].use, XISlaveAdded, info[i].name);
+                handle_device(info[i].id, info[i].use, XIDeviceEnabled, info[i].name);
                 break;
             }
         }
