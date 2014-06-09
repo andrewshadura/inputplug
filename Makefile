@@ -11,8 +11,10 @@ CLEANFILES      = ${MAN}
 
 PKG_CONFIG_DEPS = x11 xext xi
 
-MKC_CHECK_HEADERS  = ixp.h
-MKC_CHECK_FUNCLIBS = ixp_mount:ixp
+MKC_CHECK_HEADERS  = ixp.h bsd/libutil.h libutil.h
+MKC_CHECK_FUNCLIBS = ixp_mount:ixp pidfile_open:bsd pidfile_open:util
+
+CFLAGS_inputplug   = ${HAVE_FUNCLIB.pidfile_open:?-DHAVE_PIDFILE=1:}
 
 WARNS           = 2
 
