@@ -382,6 +382,7 @@ int main(int argc, char *argv[])
                 break;
             }
         }
+        XFreeDeviceList(info);
     }
 
     mask.deviceid = XIAllDevices;
