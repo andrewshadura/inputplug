@@ -17,7 +17,7 @@ inputplug — XInput event monitor
 
 # SYNOPSIS
 
-__inputplug__ \[__\-a__ _address_\] \[__\-f__ _path_\] \[__\-v__\] \[__\-n__\] \[__\-d__\] __\-c__ _command-prefix_
+__inputplug__ \[__\-a__ _address_\] \[__\-f__ _path_\] \[__\-v__\] \[__\-n__\] \[__\-d__\] \[__\-0__\] __\-c__ _command-prefix_
 
 # DESCRIPTION
 
@@ -72,6 +72,12 @@ A summary of options is included below.
 * __\-d__
 
     Don't daemonize. Run in the foreground.
+
+* __\-0__
+
+    On start, trigger added and enabled events for each plugged devices. A
+    master device will trigger the "added" event while a slave device will
+    trigger both the "added" and the "enabled" device.
 
 * __\-c__ _command-prefix_
 

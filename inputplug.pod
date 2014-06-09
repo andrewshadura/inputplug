@@ -4,7 +4,7 @@ inputplug - XInput event monitor
 
 =head1 SYNOPSIS
 
-B<inputplug> [B<-a> I<address>] [B<-f> I<path>] [B<-v>] [B<-n>] [B<-d>] B<-c> I<command-prefix>
+B<inputplug> [B<-a> I<address>] [B<-f> I<path>] [B<-v>] [B<-n>] [B<-d>] [B<-0>] B<-c> I<command-prefix>
 
 =head1 DESCRIPTION
 
@@ -84,6 +84,12 @@ run. This implies B<-d>.
 =item B<-d>
 
 Don't daemonize. Run in the foreground.
+
+=item B<-0>
+
+On start, trigger added and enabled events for each plugged devices. A
+master device will trigger the "added" event while a slave device will
+trigger both the "added" and the "enabled" device.
 
 =item B<-c> I<command-prefix>
 

@@ -133,6 +133,31 @@ static void execute(const char *command, char *const args[])
 
 static char * command = NULL;
 
+static int handle_device(int id, int type, int flags)
+{
+    const struct pair * use = map(type, device_types, true);
+    const struct pair * change = map(flags, changes, false);
+
+    if (change) {
+        char deviceid[strlen(UINT_MAX_STRING) + 1];
+        sprintf(deviceid, "%d", id);
+        char *const args[] = {
+            command,
+            change->value,
+            deviceid,
+            use ? use->value : "",
+            NULL
+        };
+        execute(command, args);
+        #if HAVE_HEADER_IXP_H
+        postevent(command, args);
+        #endif
+
+        return change->key;
+    }
+    return -1;
+}
+
 static void parse_event(XIHierarchyEvent *event)
 {
     int i;
@@ -141,29 +166,13 @@ static void parse_event(XIHierarchyEvent *event)
         int flags = event->info[i].flags;
         int j = 16;
         while (flags && j) {
+            int ret;
             j--;
-            const struct pair * use = map(event->info[i].use, device_types, true);
-            const struct pair * change = map(flags, changes, false);
-
-            if (change) {
-                char deviceid[strlen(UINT_MAX_STRING) + 1];
-                sprintf(deviceid, "%d", event->info[i].deviceid);
-                char *const args[] = {
-                     command,
-                     change->value,
-                     deviceid,
-                     use ? use->value : "",
-                     NULL
-                };
-                execute(command, args);
-                #if HAVE_HEADER_IXP_H
-                postevent(command, args);
-                #endif
-
-                flags -= change->key;
-            } else {
+            ret = handle_device(event->info[i].deviceid, event->info[i].use, flags);
+            if (ret == -1) {
                 break;
             }
+            flags -= ret;
         }
     }
 }
@@ -219,7 +228,7 @@ int main(int argc, char *argv[])
     int xi_opcode;
     int event, error;
     int opt;
-    bool foreground = false;
+    bool foreground = false, bootstrap = false;
 
     #if HAVE_HEADER_IXP_H
     IxpClient *client;
@@ -231,7 +240,7 @@ int main(int argc, char *argv[])
     char * pidfile = NULL;
     #endif
 
-    while (((opt = getopt(argc, argv, IXP_GETOPT "vhndc:" PIDFILE_GETOPT)) != -1) ||
+    while (((opt = getopt(argc, argv, IXP_GETOPT "vhnd0c:" PIDFILE_GETOPT)) != -1) ||
            ((opt == -1) && (command == NULL))) {
         switch (opt) {
             case 'v':
@@ -243,6 +252,9 @@ int main(int argc, char *argv[])
                 break;
             case 'd':
                 foreground = true;
+                break;
+            case '0':
+                bootstrap = true;
                 break;
             case 'c':
                 if (command)
@@ -351,6 +363,25 @@ int main(int argc, char *argv[])
     #endif
 
     display = XOpenDisplay(NULL);
+
+    if (bootstrap) {
+        XDeviceInfo *info;
+        int num_devices;
+        info = XListInputDevices(display, &num_devices);
+        for (int i=0; i < num_devices; i++) {
+            switch (info[i].use) {
+            case XIMasterPointer:
+            case XIMasterKeyboard:
+                handle_device(info[i].id, info[i].use, XIMasterAdded);
+                break;
+            case XISlavePointer:
+            case XISlaveKeyboard:
+                handle_device(info[i].id, info[i].use, XISlaveAdded);
+                handle_device(info[i].id, info[i].use, XIDeviceEnabled);
+                break;
+            }
+        }
+    }
 
     mask.deviceid = XIAllDevices;
     mask.mask_len = XIMaskLen(XI_LASTEVENT);
