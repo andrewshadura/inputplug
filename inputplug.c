@@ -221,7 +221,6 @@ int main(int argc, char *argv[])
 
     #if HAVE_HEADER_IXP_H
     IxpClient *client;
-    #endif
 
     char * address = getenv_dup("WMII_ADDRESS");
     char * path = strdup("/event");
