@@ -159,19 +159,19 @@ static int handle_device(int id, int type, int flags, char *name)
     return -1;
 }
 
-static char *get_device_name(Display *display, unsigned long deviceid)
+static char *get_device_name(Display *display, int deviceid)
 {
-        XDeviceInfo *info;
+        XIDeviceInfo *info;
         int num_devices;
         char *name = NULL;
-        info = XListInputDevices(display, &num_devices);
+        info = XIQueryDevice(display, XIAllDevices, &num_devices);
         for (int i=0; i < num_devices; i++) {
-            if (info[i].id == deviceid) {
+            if (info[i].deviceid == deviceid) {
                 name = strdup(info[i].name);
                 break;
             }
         }
-        XFreeDeviceList(info);
+        XIFreeDeviceInfo(info);
         return name;
 }
 
@@ -385,23 +385,23 @@ int main(int argc, char *argv[])
     display = XOpenDisplay(NULL);
 
     if (bootstrap) {
-        XDeviceInfo *info;
+        XIDeviceInfo *info;
         int num_devices;
-        info = XListInputDevices(display, &num_devices);
+        info = XIQueryDevice(display, XIAllDevices, &num_devices);
         for (int i=0; i < num_devices; i++) {
             switch (info[i].use) {
             case XIMasterPointer:
             case XIMasterKeyboard:
-                handle_device(info[i].id, info[i].use, XIMasterAdded, info[i].name);
+                handle_device(info[i].deviceid, info[i].use, XIMasterAdded, info[i].name);
                 break;
             case XISlavePointer:
             case XISlaveKeyboard:
-                handle_device(info[i].id, info[i].use, XISlaveAdded, info[i].name);
-                handle_device(info[i].id, info[i].use, XIDeviceEnabled, info[i].name);
+                handle_device(info[i].deviceid, info[i].use, XISlaveAdded, info[i].name);
+                handle_device(info[i].deviceid, info[i].use, XIDeviceEnabled, info[i].name);
                 break;
             }
         }
-        XFreeDeviceList(info);
+        XIFreeDeviceInfo(info);
     }
 
     mask.deviceid = XIAllDevices;
