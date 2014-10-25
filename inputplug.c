@@ -165,7 +165,9 @@ static char *get_device_name(Display *display, int deviceid)
         int num_devices;
         char *name = NULL;
         info = XIQueryDevice(display, XIAllDevices, &num_devices);
-        for (int i=0; i < num_devices; i++) {
+
+        int i;
+        for (i = 0; i < num_devices; i++) {
             if (info[i].deviceid == deviceid) {
                 name = strdup(info[i].name);
                 break;
@@ -389,7 +391,9 @@ int main(int argc, char *argv[])
         XIDeviceInfo *info;
         int num_devices;
         info = XIQueryDevice(display, XIAllDevices, &num_devices);
-        for (int i=0; i < num_devices; i++) {
+
+        int i;
+        for (i = 0; i < num_devices; i++) {
             switch (info[i].use) {
             case XIMasterPointer:
             case XIMasterKeyboard:
