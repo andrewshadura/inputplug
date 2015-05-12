@@ -374,8 +374,6 @@ int main(int argc, char *argv[])
                 fprintf(stderr, "Daemonised as %ju.\n", (uintmax_t)pid);
             }
             exit(EXIT_SUCCESS);
-        } else {
-            exit(EXIT_SUCCESS);
         }
     }
 
