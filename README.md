@@ -1,13 +1,13 @@
 inputplug
 =========
 
-inputplug is a very simple daemon monitoring XInput events and running
-scripts on hierarchy changes (such as device attach, remove, enable or
-disable).
+inputplug is a very simple daemon which monitors XInput events and runs
+arbitrary scripts on hierarchy change events (such as a device being
+attached, removed, enabled or disabled).
 
 To build the project, it's best to use [mk-configure(7)](http://github.com/cheusov/mk-configure),
-a build system based on [bmake(1)](http://www.crufty.net/help/sjg/bmake.html). However, GNU Makefile
-is provided for convenience.
+a build system based on [bmake(1)](http://www.crufty.net/help/sjg/bmake.html). If you can’t use
+it for some reason, a GNU Makefile is also included.
 
 * * *
 
@@ -23,7 +23,7 @@ __inputplug__ \[__\-a__ _address_\] \[__\-f__ _path_\] \[__\-v__\] \[__\-n__\] \
 
 __inputplug__ is a daemon which connects to a running X server
 and monitors its XInput hierarchy change events. Such events arrive
-when a device being attached or removed, enabled or disabled etc.
+when a device is being attached or removed, enabled or disabled etc.
 
 When a hierarchy change happens, __inputplug__ parses the event notification
 structure, and calls the command specified by _command-prefix_. The command
@@ -52,7 +52,7 @@ Device type may be any of those:
 
 Device identifier is an integer.
 
-Also, if compiled with __libixp__, inputplug can post events to the __wmii__ event file.
+Optionally, if compiled with __libixp__, inputplug can post events to the __wmii__ event file.
 To enable __wmii__ support, the address of its __9P__ server needs to be specified.
 
 # OPTIONS
@@ -71,7 +71,7 @@ A summary of options is included below.
 
 * __\-d__
 
-    Don't daemonize. Run in the foreground.
+    Don't daemonise. Run in the foreground.
 
 * __\-0__
 
