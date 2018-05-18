@@ -9,7 +9,7 @@ MAN             = inputplug.1
 
 CLEANFILES      = ${MAN}
 
-PKG_CONFIG_DEPS = x11 xext xi
+MKC_REQUIRE_PKGCONFIG = x11 xext xi
 
 MKC_CHECK_HEADERS  = ixp.h bsd/libutil.h libutil.h
 MKC_CHECK_FUNCLIBS = ixp_mount:ixp pidfile_open:bsd pidfile_open:util
