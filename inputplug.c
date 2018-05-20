@@ -12,9 +12,11 @@
 #include <limits.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <X11/Xlib.h>
-#include <X11/Xutil.h>
-#include <X11/extensions/XInput.h>
+
+#include <xcb/xcb.h>
+#include <xcb/xinput.h>
+#include <xcb/xproto.h>
+
 #include <X11/extensions/XInput2.h>
 
 #if HAVE_HEADER_IXP_H
@@ -159,42 +161,79 @@ static int handle_device(int id, int type, int flags, char *name)
     return -1;
 }
 
-static char *get_device_name(Display *display, int deviceid)
+static xcb_screen_t *screen_of_display(xcb_connection_t *conn, int screen_no)
 {
-        XIDeviceInfo *info;
-        int num_devices;
-        char *name = NULL;
-        info = XIQueryDevice(display, XIAllDevices, &num_devices);
+    xcb_screen_iterator_t iter;
+    const xcb_setup_t *setup;
 
-        int i;
-        for (i = 0; i < num_devices; i++) {
-            if (info[i].deviceid == deviceid) {
-                name = strdup(info[i].name);
+    setup = xcb_get_setup(conn);
+
+    if (setup) {
+        iter = xcb_setup_roots_iterator(setup);
+        for (; iter.rem; --screen_no, xcb_screen_next(&iter)) {
+            if (screen_no == 0) {
+                return iter.data;
+            }
+        }
+    }
+    return NULL;
+}
+
+static char *get_device_name(xcb_connection_t *conn, xcb_input_device_id_t deviceid)
+{
+        char * name = NULL;
+        xcb_input_xi_query_device_cookie_t xi_cookie;
+        xi_cookie = xcb_input_xi_query_device(conn, XCB_INPUT_DEVICE_ALL);
+
+        xcb_input_xi_query_device_reply_t *reply;
+        reply = xcb_input_xi_query_device_reply(conn, xi_cookie, NULL);
+
+        xcb_input_xi_device_info_iterator_t it;
+        it = xcb_input_xi_query_device_infos_iterator(reply);
+        for (; it.rem; xcb_input_xi_device_info_next(&it)) {
+            xcb_input_xi_device_info_t *info = it.data;
+
+            if (info->deviceid != deviceid) {
+                continue;
+            }
+
+            if (info->name_len) {
+                name = calloc(info->name_len + 1, 1);
+                if (name == NULL) {
+                    fprintf(stderr, "Failed to allocate memory.\n");
+                    exit(EXIT_FAILURE);
+                }
+
+                strncpy(name, xcb_input_xi_device_info_name(info), info->name_len);
+                name[info->name_len] = '\0';
                 break;
             }
         }
-        XIFreeDeviceInfo(info);
+
+        free(reply);
+
         return name;
 }
 
-static void parse_event(XIHierarchyEvent *event)
+static void parse_event(xcb_connection_t *conn, xcb_generic_event_t *event)
 {
-    int i;
-    for (i = 0; i < event->num_info; i++)
+    xcb_input_hierarchy_info_iterator_t it;
+    it = xcb_input_hierarchy_infos_iterator((xcb_input_hierarchy_event_t *)event);
+    for (; it.rem; xcb_input_hierarchy_info_next(&it))
     {
-        int flags = event->info[i].flags;
+        xcb_input_hierarchy_info_t *info = it.data;
         int j = 16;
-        while (flags && j) {
+        while (info->flags && j) {
             int ret;
-            char *name = get_device_name(event->display, event->info[i].deviceid);
+            char *name = get_device_name(conn, info->deviceid);
             j--;
-            ret = handle_device(event->info[i].deviceid, event->info[i].use, flags,
+            ret = handle_device(info->deviceid, info->type, info->flags,
                                 name);
             free(name);
             if (ret == -1) {
                 break;
             }
-            flags -= ret;
+            info->flags -= ret;
         }
     }
 }
@@ -244,9 +283,15 @@ static pid_t daemonise(void) {
     return 0;
 }
 
+static int running = 1;
+
+static void signal_handler(int signal) {
+    (void)signal;
+    running = 0;
+}
+
 int main(int argc, char *argv[])
 {
-    XIEventMask mask;
     int xi_opcode;
     int event, error;
     int opt;
@@ -315,20 +360,30 @@ int main(int argc, char *argv[])
         }
     }
 
-    Display *display;
-    display = XOpenDisplay(NULL);
+    xcb_connection_t *conn;
+    conn = xcb_connect(NULL, NULL);
 
-    if (display == NULL) {
+    if (conn == NULL) {
         fprintf(stderr, "Can't open X display.\n");
-        return EXIT_FAILURE;
+        exit(EXIT_FAILURE);
     }
 
-    if (!XQueryExtension(display, "XInputExtension", &xi_opcode, &event, &error)) {
+    const char ext[] = "XInputExtension";
+
+    xcb_query_extension_cookie_t qe_cookie;
+    qe_cookie = xcb_query_extension(conn, strlen(ext), ext);
+
+    xcb_query_extension_reply_t *rep;
+	rep = xcb_query_extension_reply(conn, qe_cookie, NULL);
+
+    if (!rep || !rep->present) {
         printf("X Input extension not available.\n");
-        goto out;
+        exit(EXIT_FAILURE);
     }
+    xi_opcode = rep->major_opcode;
+    free(rep);
 
-    XCloseDisplay(display);
+    xcb_disconnect(conn);
 
     #if HAVE_HEADER_IXP_H
     if (address) {
@@ -383,38 +438,68 @@ int main(int argc, char *argv[])
     }
     #endif
 
-    display = XOpenDisplay(NULL);
+    int screen_default_no;
+    conn = xcb_connect(NULL, &screen_default_no);
 
     if (bootstrap) {
-        XIDeviceInfo *info;
-        int num_devices;
-        info = XIQueryDevice(display, XIAllDevices, &num_devices);
+        xcb_input_xi_query_device_cookie_t xi_cookie;
+        xi_cookie = xcb_input_xi_query_device(conn, XCB_INPUT_DEVICE_ALL);
 
-        int i;
-        for (i = 0; i < num_devices; i++) {
-            switch (info[i].use) {
-            case XIMasterPointer:
-            case XIMasterKeyboard:
-                handle_device(info[i].deviceid, info[i].use, XIMasterAdded, info[i].name);
+        xcb_input_xi_query_device_reply_t *reply;
+        reply = xcb_input_xi_query_device_reply(conn, xi_cookie, NULL);
+
+        xcb_input_xi_device_info_iterator_t it;
+        it = xcb_input_xi_query_device_infos_iterator(reply);
+        for (; it.rem; xcb_input_xi_device_info_next(&it)) {
+            xcb_input_xi_device_info_t *info = it.data;
+            char * name;
+
+            if (info->name_len) {
+                name = calloc(info->name_len + 1, 1);
+                if (name == NULL) {
+                    fprintf(stderr, "Failed to allocate memory.\n");
+                    exit(EXIT_FAILURE);
+                }
+
+                strncpy(name, xcb_input_xi_device_info_name(info), info->name_len);
+                name[info->name_len] = '\0';
+            }
+
+            switch (info->type) {
+            case XCB_INPUT_DEVICE_TYPE_MASTER_POINTER:
+            case XCB_INPUT_DEVICE_TYPE_MASTER_KEYBOARD:
+                handle_device(info->deviceid, info->type, XIMasterAdded, name);
                 break;
-            case XISlavePointer:
-            case XISlaveKeyboard:
-                handle_device(info[i].deviceid, info[i].use, XISlaveAdded, info[i].name);
-                handle_device(info[i].deviceid, info[i].use, XIDeviceEnabled, info[i].name);
+            case XCB_INPUT_DEVICE_TYPE_SLAVE_POINTER:
+            case XCB_INPUT_DEVICE_TYPE_SLAVE_KEYBOARD:
+                handle_device(info->deviceid, info->type, XISlaveAdded, name);
+                handle_device(info->deviceid, info->type, XIDeviceEnabled, name);
                 break;
             }
+
+            if (name) {
+                free(name);
+            }
         }
-        XIFreeDeviceInfo(info);
+
+        free(reply);
     }
 
-    mask.deviceid = XIAllDevices;
-    mask.mask_len = XIMaskLen(XI_LASTEVENT);
-    mask.mask = calloc(mask.mask_len, sizeof(char));
-    XISetMask(mask.mask, XI_HierarchyChanged);
-    XISelectEvents(display, DefaultRootWindow(display), &mask, 1);
-    XSync(display, False);
+    xcb_screen_t *screen = screen_of_display(conn, screen_default_no);
+    if (!screen) {
+        fprintf(stderr, "Failed to get the screen for the X display");
+        exit(EXIT_FAILURE);
+    }
 
-    free(mask.mask);
+    struct {
+        xcb_input_event_mask_t head;
+        xcb_input_xi_event_mask_t mask;
+    } mask;
+    mask.head.deviceid = XCB_INPUT_DEVICE_ALL;
+    mask.head.mask_len = sizeof(mask.mask) / sizeof(uint32_t);
+    mask.mask = XCB_INPUT_XI_EVENT_MASK_HIERARCHY;
+
+    xcb_input_xi_select_events(conn, screen->root, 1, &mask.head);
 
     /* avoid zombies when spawning processes */
     struct sigaction sigchld_action = {
@@ -438,25 +523,61 @@ int main(int argc, char *argv[])
     }
     #endif
 
-    while(1) {
-        XEvent ev;
-        XGenericEventCookie *cookie = (XGenericEventCookie*)&ev.xcookie;
-        XNextEvent(display, (XEvent*)&ev);
+    struct sigaction signal_action = {
+        .sa_handler = &signal_handler,
+    };
+    sigaction(SIGTERM, &signal_action, NULL);
+    sigaction(SIGQUIT, &signal_action, NULL);
+    sigaction(SIGINT, &signal_action, NULL);
+    sigaction(SIGHUP, &signal_action, NULL);
 
-        if (XGetEventData(display, cookie)) {
-            if (cookie->type == GenericEvent &&
-                cookie->extension == xi_opcode &&
-                cookie->evtype == XI_HierarchyChanged) {
-                    parse_event(cookie->data);
+    xcb_flush(conn);
+
+    fd_set fds;
+    int xfd = xcb_get_file_descriptor(conn);
+
+    while (running) {
+        FD_ZERO(&fds);
+        FD_SET(xfd, &fds);
+
+        struct timeval tv = {
+            .tv_usec = 0,
+            .tv_sec = 10
+        };
+
+        int r = select(xfd + 1, &fds, NULL, NULL, &tv);
+        if (r < 0) {
+            if (errno == EINTR) {
+                break;
             }
-            XFreeEventData(display, cookie);
+
+            perror("select");
+            break;
         }
+
+        if (FD_ISSET(xfd, &fds)) {
+            if (xcb_connection_has_error(conn)) {
+                break;
+            }
+
+            xcb_generic_event_t *e;
+            while (running && (e = xcb_poll_for_event(conn))) {
+                xcb_ge_generic_event_t *ge = (xcb_ge_generic_event_t *)e;
+
+                if (ge->response_type == XCB_GE_GENERIC &&
+                    ge->extension == xi_opcode &&
+                    ge->event_type == XCB_INPUT_HIERARCHY) {
+
+                        parse_event(conn, e);
+                }
+                free(e);
+            }
+        }
+
     }
 
-
-    XSync(display, False);
-out:
-    XCloseDisplay(display);
+    xcb_flush(conn);
+    xcb_disconnect(conn);
 
     return EXIT_SUCCESS;
 }
