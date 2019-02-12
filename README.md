@@ -17,19 +17,19 @@ inputplug — XInput event monitor
 
 # SYNOPSIS
 
-__inputplug__ \[__\-a__ _address_\] \[__\-f__ _path_\] \[__\-v__\] \[__\-n__\] \[__\-d__\] \[__\-0__\] __\-c__ _command-prefix_
+**inputplug** \[**-a** _address_\] \[**-f** _path_\] \[**-v**\] \[**-n**\] \[**-d**\] \[**-0**\] **-c** _command-prefix_
 
 # DESCRIPTION
 
-__inputplug__ is a daemon which connects to a running X server
+**inputplug** is a daemon which connects to a running X server
 and monitors its XInput hierarchy change events. Such events arrive
 when a device is being attached or removed, enabled or disabled etc.
 
-When a hierarchy change happens, __inputplug__ parses the event notification
+When a hierarchy change happens, **inputplug** parses the event notification
 structure, and calls the command specified by _command-prefix_. The command
-receives three arguments:
+receives four arguments:
 
-* _command-prefix_ _event-type_ _device-id_ _device-type_
+* _command-prefix_ _event-type_ _device-id_ _device-type_ _device-name_
 
 Event type may be one of the following:
 
@@ -50,51 +50,51 @@ Device type may be any of those:
 * _XISlaveKeyboard_
 * _XIFloatingSlave_
 
-Device identifier is an integer.
+Device identifier is an integer. The device name may have embedded spaces.
 
-Optionally, if compiled with __libixp__, inputplug can post events to the __wmii__ event file.
-To enable __wmii__ support, the address of its __9P__ server needs to be specified.
+Optionally, if compiled with **libixp**, inputplug can post events to the **wmii** event file.
+To enable **wmii** support, the address of its **9P** server needs to be specified.
 
 # OPTIONS
 
 A summary of options is included below.
 
-* __\-v__
+* **-v**
 
     Be a bit more verbose.
 
-* __\-n__
+* **-n**
 
     Start up, monitor events, but don't actually run anything.
     With verbose more enabled, would print the actual command it'd
-    run. This implies __\-d__.
+    run. This implies **-d**.
 
-* __\-d__
+* **-d**
 
     Don't daemonise. Run in the foreground.
 
-* __\-0__
+* **-0**
 
     On start, trigger added and enabled events for each plugged devices. A
     master device will trigger the "added" event while a slave device will
     trigger both the "added" and the "enabled" device.
 
-* __\-c__ _command-prefix_
+* **-c** _command-prefix_
 
     Command prefix to run. Unfortunately, currently this is passed to
     [execvp(3)](http://manpages.debian.org/cgi-bin/man.cgi?query=execvp) directly, so spaces aren't allowed. This is subject to
     change in future.
 
-* __\-a__ _address_
+* **-a** _address_
 
-    The address at which to connect to __wmii__. The address takes the
+    The address at which to connect to **wmii**. The address takes the
     form _<protocol>_!_<address>_. If an empty string is passed,
-    __inputplug__ tries to find __wmii__ automatically.
+    **inputplug** tries to find **wmii** automatically.
 
-* __\-f__ _path_
+* **-f** _path_
 
-    Path to the event file within __9P__ filesystem served by __wmii__.
-    The default is __/event__.
+    Path to the event file within **9P** filesystem served by **wmii**.
+    The default is **/event**.
 
 # ENVIRONMENT
 
@@ -104,7 +104,7 @@ A summary of options is included below.
 
 * _WMII\_ADDRESS_
 
-    __wmii__ address.
+    **wmii** address.
 
 # BUGS
 
@@ -116,10 +116,12 @@ Probably, there are some.
 
 # COPYRIGHT
 
-Copyright (C) 2013, Andrew Shadura.
+Copyright (C) 2013, 2014, 2018 Andrej Shadura.
+
+Copyright (C) 2014 Vincent Bernat.
 
 Licensed as MIT/X11.
 
 # AUTHOR
 
-Andrew Shadura <andrewsh@debian.org>
+Andrej Shadura <andrewsh@debian.org>

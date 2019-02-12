@@ -10,11 +10,11 @@ B<inputplug> [B<-a> I<address>] [B<-f> I<path>] [B<-v>] [B<-n>] [B<-d>] [B<-0>] 
 
 B<inputplug> is a daemon which connects to a running X server
 and monitors its XInput hierarchy change events. Such events arrive
-when a device being attached or removed, enabled or disabled etc.
+when a device is being attached or removed, enabled or disabled etc.
 
 When a hierarchy change happens, B<inputplug> parses the event notification
 structure, and calls the command specified by I<command-prefix>. The command
-receives three arguments:
+receives four arguments:
 
 =over
 
@@ -60,10 +60,9 @@ Device type may be any of those:
 
 =back
 
-Device identifier is an integer. Beware that the device name is likely
-to contain spaces.
+Device identifier is an integer. The device name may have embedded spaces.
 
-Also, if compiled with B<libixp>, inputplug can post events to the B<wmii> event file.
+Optionally, if compiled with B<libixp>, inputplug can post events to the B<wmii> event file.
 To enable B<wmii> support, the address of its B<9P> server needs to be specified.
 
 =head1 OPTIONS
@@ -84,7 +83,7 @@ run. This implies B<-d>.
 
 =item B<-d>
 
-Don't daemonize. Run in the foreground.
+Don't daemonise. Run in the foreground.
 
 =item B<-0>
 
@@ -135,10 +134,12 @@ L<xinput(1)>
 
 =head1 COPYRIGHT
 
-Copyright (C) 2013, Andrew Shadura.
+Copyright (C) 2013, 2014, 2018 Andrej Shadura.
+
+Copyright (C) 2014 Vincent Bernat.
 
 Licensed as MIT/X11.
 
 =head1 AUTHOR
 
-Andrew Shadura L<< <andrewsh@debian.org> >>
+Andrej Shadura L<< <andrewsh@debian.org> >>
