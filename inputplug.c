@@ -392,6 +392,7 @@ int main(int argc, char *argv[])
     }
     #endif
 
+    #ifdef HAVE_DAEMON
     if (!foreground) {
         if (daemon(0, 0) != 0) {
             fprintf(stderr, "Cannot daemonize: %s.\n", strerror(errno));
@@ -401,6 +402,9 @@ int main(int argc, char *argv[])
             exit(EXIT_FAILURE);
         }
     }
+    #else
+    fprintf(stderr, "Linked without daemon(), running in foreground.\n");
+    #endif
 
     #ifdef HAVE_PIDFILE
     if (pidfile && pfh) {

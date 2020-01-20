@@ -13,11 +13,12 @@ MKC_REQUIRE_PKGCONFIG = xcb xcb-xinput
 
 MKC_REQUIRE_HEADERS = X11/extensions/XInput2.h
 MKC_CHECK_HEADERS  = ixp.h bsd/libutil.h libutil.h
-MKC_CHECK_FUNCLIBS = ixp_mount:ixp pidfile_open:bsd pidfile_open:util
+MKC_CHECK_FUNCLIBS = ixp_mount:ixp pidfile_open:bsd pidfile_open:util daemon
 
 CFLAGS_inputplug   = \
 	${${HAVE_FUNCLIB.pidfile_open.bsd}:?-DHAVE_PIDFILE=1:} \
 	${${HAVE_FUNCLIB.pidfile_open.util}:?-DHAVE_PIDFILE=1:} \
+	${${HAVE_FUNCLIB.daemon}:?-DHAVE_DAEMON=1:}
 
 WARNS           = 2
 
