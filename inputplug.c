@@ -8,10 +8,10 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
-#include <signal.h>
 #include <limits.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/wait.h>
 
 #include <xcb/xcb.h>
 #include <xcb/xinput.h>
@@ -119,11 +119,12 @@ static void execute(const char *command, char *const args[])
 
         fflush(NULL);
         setpgid(0, 0);
-        switch (child = fork()) {
+        switch ((child = fork())) {
             case 0:            /* child */
                 execvp(command, args);
                 exit(127);
             default:           /* parent */
+                waitpid(child, NULL, 0);
                 break;
         }
     }
@@ -477,15 +478,6 @@ int main(int argc, char *argv[])
     mask.mask = XCB_INPUT_XI_EVENT_MASK_HIERARCHY;
 
     xcb_input_xi_select_events(conn, screen->root, 1, &mask.head);
-
-    /* avoid zombies when spawning processes */
-    struct sigaction sigchld_action = {
-        .sa_handler = SIG_DFL,
-#ifdef SA_NOCLDWAIT
-        .sa_flags = SA_NOCLDWAIT
-#endif
-    };
-    sigaction(SIGCHLD, &sigchld_action, NULL);
 
     #if HAVE_HEADER_IXP_H
     if (address) {
