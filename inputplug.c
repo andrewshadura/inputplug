@@ -264,7 +264,6 @@ static void signal_handler(int signal) {
 int main(int argc, char *argv[])
 {
     int xi_opcode;
-    int event, error;
     int opt;
     bool foreground = false, bootstrap = false;
 
