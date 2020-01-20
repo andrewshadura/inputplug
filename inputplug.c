@@ -253,36 +253,6 @@ static char * getenv_dup(const char * name) {
 struct pidfh *pfh = NULL;
 #endif
 
-static pid_t daemonise(void) {
-    pid_t pid;
-    switch (pid = fork()) {
-        case -1:           /* failure */
-#ifdef HAVE_PIDFILE
-            pidfile_remove(pfh);
-#endif
-            exit(EXIT_FAILURE);
-        case 0:            /* child */
-            break;
-        default:           /* parent */
-            return pid;
-    }
-
-    umask(0);
-
-    if (setsid() < 0) {
-        perror("setsid");
-    }
-
-    if (chdir("/") < 0) {
-        perror("chdir");
-    }
-
-    close(STDIN_FILENO);
-    close(STDOUT_FILENO);
-    close(STDERR_FILENO);
-    return 0;
-}
-
 static int running = 1;
 
 static void signal_handler(int signal) {
@@ -423,12 +393,12 @@ int main(int argc, char *argv[])
     #endif
 
     if (!foreground) {
-        pid_t pid;
-        if ((pid = daemonise()) != 0) {
-            if (verbose) {
-                fprintf(stderr, "Daemonised as %ju.\n", (uintmax_t)pid);
-            }
-            exit(EXIT_SUCCESS);
+        if (daemon(0, 0) != 0) {
+            fprintf(stderr, "Cannot daemonize: %s.\n", strerror(errno));
+            #ifdef HAVE_PIDFILE
+            pidfile_remove(pfh);
+            #endif
+            exit(EXIT_FAILURE);
         }
     }
 
