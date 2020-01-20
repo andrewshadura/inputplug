@@ -328,7 +328,7 @@ int main(int argc, char *argv[])
                 #ifdef HAVE_PIDFILE
                     "[-p pidfile] "
                 #endif
-                "[-v] [-n] [-d] -c command-prefix\n", argv[0]);
+                "[-v] [-n] [-d] [-0] -c command-prefix\n", argv[0]);
                 exit(opt == 'h' ? EXIT_SUCCESS : EXIT_FAILURE);
         }
     }
