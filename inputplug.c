@@ -297,6 +297,9 @@ int main(int argc, char *argv[])
                 if (command)
                     free(command);
                 command = realpath(optarg, NULL);
+                if (!command) {
+                    fprintf(stderr, "Cannot use command %s: %s.\n", optarg, strerror(errno));
+                }
                 break;
             #if HAVE_HEADER_IXP_H
             case 'a':
