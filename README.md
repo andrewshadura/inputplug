@@ -116,9 +116,9 @@ Probably, there are some.
 
 # COPYRIGHT
 
-Copyright (C) 2013, 2014, 2018 Andrej Shadura.
+Copyright (C) 2013, 2014, 2018, 2020 Andrej Shadura.
 
-Copyright (C) 2014 Vincent Bernat.
+Copyright (C) 2014, 2020 Vincent Bernat.
 
 Licensed as MIT/X11.
 
