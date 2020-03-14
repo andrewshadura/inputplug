@@ -225,15 +225,12 @@ fn main() {
             if hier_event.extension != xinput_info.major_opcode {
                 continue;
             }
-            let infos = hier_event.infos.iter()
-                .filter(|&x| x.flags != 0)
-                .collect::<Vec<&HierarchyInfo>>();
-            for info in infos {
+            for info in hier_event.infos {
                 let flags = IterableMask::from(info.flags)
                     .flat_map(|x| HierarchyMask::try_from(x))
                     .collect::<Vec<HierarchyMask>>();
                 for flag in flags {
-                    handle_device(&opt, &conn, info, flag);
+                    handle_device(&opt, &conn, &info, flag);
                 }
             }
         }
