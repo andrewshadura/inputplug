@@ -75,9 +75,8 @@ fn device_name(conn: &impl RequestConnection, deviceid: DeviceId) -> Option<Stri
     if let Ok(r) = conn.xinput_xiquery_device(deviceid) {
         if let Ok(reply) = r.reply() {
             reply.infos.iter()
-                .filter(|info| info.deviceid == deviceid)
+                .find(|info| info.deviceid == deviceid)
                 .map(|info| String::from_utf8_lossy(&info.name).to_string())
-                .next()
         } else {
             None
         }
