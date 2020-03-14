@@ -1,5 +1,5 @@
 mod mask_iter;
-use mask_iter::{IterableMask};
+use mask_iter::IterableMask;
 use structopt::StructOpt;
 use std::convert::{TryFrom, From};
 use std::path::PathBuf;
@@ -111,7 +111,12 @@ impl<T> HierarchyChangeEvent<T> for HierarchyInfo {
     }
 }
 
-fn handle_device<T: HierarchyChangeEvent<T>>(opt: &Opt, conn: &impl RequestConnection, device_info: &T, change: HierarchyMask) {
+fn handle_device<T: HierarchyChangeEvent<T>>(
+    opt: &Opt,
+    conn: &impl RequestConnection,
+    device_info: &T,
+    change: HierarchyMask
+) {
     let mut command = Command::new(&opt.command);
 
     command.arg(format!("XI{:?}", change))
@@ -191,10 +196,12 @@ fn main() {
             });
             for info in reply.infos {
                 match DeviceType::try_from(info.type_).unwrap() {
-                    DeviceType::MasterPointer | DeviceType::MasterKeyboard => {
+                    DeviceType::MasterPointer |
+                    DeviceType::MasterKeyboard => {
                         handle_device(&opt, &conn, &info, HierarchyMask::MasterAdded)
-                    },
-                    DeviceType::SlavePointer | DeviceType::SlaveKeyboard => {
+                    }
+                    DeviceType::SlavePointer |
+                    DeviceType::SlaveKeyboard => {
                         handle_device(&opt, &conn, &info, HierarchyMask::SlaveAdded);
                         handle_device(&opt, &conn, &info, HierarchyMask::DeviceEnabled)
                     }

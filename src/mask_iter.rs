@@ -46,9 +46,18 @@ mod tests {
 
     #[test]
     fn basic() {
-        assert_eq!(IterableMask::from(0x123ce_u32).collect::<Vec<u32>>(), [0x10000, 0x2000, 0x200, 0x100, 0x80, 0x40, 8, 4, 2]);
-        assert_eq!(IterableMask::from(0x23c5_u16).collect::<Vec<u16>>(), [0x2000, 0x200, 0x100, 0x80, 0x40, 4, 1]);
-        assert_eq!(IterableMask::from(0xce_u8).collect::<Vec<u8>>(), [0x80, 0x40, 8, 4, 2]);
+        assert_eq!(
+            IterableMask::from(0x123ce_u32).collect::<Vec<u32>>(),
+            [0x10000, 0x2000, 0x200, 0x100, 0x80, 0x40, 8, 4, 2]
+        );
+        assert_eq!(
+            IterableMask::from(0x23c5_u16).collect::<Vec<u16>>(),
+            [0x2000, 0x200, 0x100, 0x80, 0x40, 4, 1]
+        );
+        assert_eq!(
+            IterableMask::from(0xce_u8).collect::<Vec<u8>>(),
+            [0x80, 0x40, 8, 4, 2]
+        );
         assert_eq!(IterableMask::from(0_u8).collect::<Vec<u8>>(), []);
     }
 }
