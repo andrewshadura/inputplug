@@ -164,7 +164,8 @@ fn main() {
         });
         */
         if let Err(e) = daemon(false, opt.verbose) {
-            eprintln!("Cannot daemonize: {}", e)
+            eprintln!("Cannot daemonize: {}", e);
+            exit(1);
         };
 
         println!("Daemonized.");
