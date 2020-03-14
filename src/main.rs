@@ -145,6 +145,9 @@ fn main() {
 
     println!("X Input extension opcode: {}", xinput_info.major_opcode);
 
+    // We don’t want to inherit an open connection into the daemon
+    drop(conn);
+
     if !opt.foreground {
         /*
         let daemonize = Daemonize::new()
@@ -167,7 +170,12 @@ fn main() {
         println!("Daemonized.");
     }
 
-    let (conn, screen_num) = x11rb::connect(None).unwrap();
+    // Now that we’re in the daemon, reconnect to the X server
+    let (conn, screen_num) = x11rb::connect(None).unwrap_or_else(|e| {
+        eprintln!("Can't reconnect to the X display: {}", e);
+        exit(1);
+    });
+
     let screen = &conn.setup().roots[screen_num];
 
     if opt.bootstrap {
