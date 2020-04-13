@@ -13,7 +13,7 @@ macro_rules! implement_iterable_mask {
             fn next(&mut self) -> Option<$t> {
                 loop {
                     let bit = self.curr_mask & self.value;
-                    self.curr_mask = self.curr_mask >> 1;
+                    self.curr_mask >>= 1;
                     if bit != 0 {
                         return Some(bit)
                     }

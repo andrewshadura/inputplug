@@ -8,11 +8,9 @@ use std::process::exit;
 use x11rb::connection::{
     Connection as _, RequestConnection
 };
-use x11rb::generated::xproto::{
-    ConnectionExt as _, GE_GENERIC_EVENT
-};
+use x11rb::generated::xproto::GE_GENERIC_EVENT;
 use x11rb::generated::xinput::{
-    self, xiquery_device, ConnectionExt as _,
+    self, ConnectionExt as _,
     Device, DeviceId, DeviceType, EventMask,
     HierarchyEvent, HierarchyInfo, HierarchyMask,
     XIDeviceInfo, XIEventMask
@@ -234,7 +232,7 @@ fn main() {
             }
             for info in hier_event.infos {
                 let flags = IterableMask::from(info.flags)
-                    .flat_map(|x| HierarchyMask::try_from(x))
+                    .flat_map(HierarchyMask::try_from)
                     .collect::<Vec<HierarchyMask>>();
                 for flag in flags {
                     handle_device(&opt, &conn, &info, flag);
