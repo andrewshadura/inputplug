@@ -5,9 +5,7 @@ inputplug is a very simple daemon which monitors XInput events and runs
 arbitrary scripts on hierarchy change events (such as a device being
 attached, removed, enabled or disabled).
 
-To build the project, it's best to use [mk-configure(7)](http://github.com/cheusov/mk-configure),
-a build system based on [bmake(1)](http://www.crufty.net/help/sjg/bmake.html). If you can’t use
-it for some reason, a GNU Makefile is also included.
+To build the project, run `cargo build`.
 
 * * *
 
@@ -17,7 +15,9 @@ inputplug — XInput event monitor
 
 # SYNOPSIS
 
-**inputplug** \[**-a** _address_\] \[**-f** _path_\] \[**-v**\] \[**-n**\] \[**-d**\] \[**-0**\] **-c** _command-prefix_
+**inputplug** \[**-v**\] \[**-n**\] \[**-d**\] \[**-0**\] **-c** _command-prefix_
+
+**inputplug** \[**-h**|**--help**\]
 
 # DESCRIPTION
 
@@ -52,12 +52,13 @@ Device type may be any of those:
 
 Device identifier is an integer. The device name may have embedded spaces.
 
-Optionally, if compiled with **libixp**, inputplug can post events to the **wmii** event file.
-To enable **wmii** support, the address of its **9P** server needs to be specified.
-
 # OPTIONS
 
 A summary of options is included below.
+
+* **-h**, **--help**
+
+    Show help (**--help** shows more details).
 
 * **-v**
 
@@ -85,16 +86,9 @@ A summary of options is included below.
     [execvp(3)](http://manpages.debian.org/cgi-bin/man.cgi?query=execvp) directly, so spaces aren't allowed. This is subject to
     change in future.
 
-* **-a** _address_
+* **-p** _pidfile_
 
-    The address at which to connect to **wmii**. The address takes the
-    form _<protocol>_!_<address>_. If an empty string is passed,
-    **inputplug** tries to find **wmii** automatically.
-
-* **-f** _path_
-
-    Path to the event file within **9P** filesystem served by **wmii**.
-    The default is **/event**.
+    Write the process ID of the running daemon to the file _pidfile_
 
 # ENVIRONMENT
 
@@ -102,13 +96,9 @@ A summary of options is included below.
 
     X11 display to connect to.
 
-* _WMII\_ADDRESS_
-
-    **wmii** address.
-
 # BUGS
 
-Probably, there are some.
+The Rust port doesn't support WMII.
 
 # SEE ALSO
 

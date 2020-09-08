@@ -4,7 +4,9 @@ inputplug - XInput event monitor
 
 =head1 SYNOPSIS
 
-B<inputplug> [B<-a> I<address>] [B<-f> I<path>] [B<-v>] [B<-n>] [B<-d>] [B<-0>] B<-c> I<command-prefix>
+B<inputplug> [B<-v>] [B<-n>] [B<-d>] [B<-0>] B<-c> I<command-prefix>
+
+B<inputplug> [B<-h>|B<--help>]
 
 =head1 DESCRIPTION
 
@@ -62,14 +64,15 @@ Device type may be any of those:
 
 Device identifier is an integer. The device name may have embedded spaces.
 
-Optionally, if compiled with B<libixp>, inputplug can post events to the B<wmii> event file.
-To enable B<wmii> support, the address of its B<9P> server needs to be specified.
-
 =head1 OPTIONS
 
 A summary of options is included below.
 
 =over
+
+=item B<-h>, B<--help>
+
+Show help (B<--help> shows more details).
 
 =item B<-v>
 
@@ -97,16 +100,9 @@ Command prefix to run. Unfortunately, currently this is passed to
 L<execvp(3)> directly, so spaces aren't allowed. This is subject to
 change in future.
 
-=item B<-a> I<address>
+=item B<-p> I<pidfile>
 
-The address at which to connect to B<wmii>. The address takes the
-form I<< <protocol> >>!I<< <address> >>. If an empty string is passed,
-B<inputplug> tries to find B<wmii> automatically.
-
-=item B<-f> I<path>
-
-Path to the event file within B<9P> filesystem served by B<wmii>.
-The default is B</event>.
+Write the process ID of the running daemon to the file I<pidfile>
 
 =back
 
@@ -118,15 +114,11 @@ The default is B</event>.
 
 X11 display to connect to.
 
-=item I<WMII_ADDRESS>
-
-B<wmii> address.
-
 =back
 
 =head1 BUGS
 
-Probably, there are some.
+The Rust port doesn't support WMII.
 
 =head1 SEE ALSO
 
