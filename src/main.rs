@@ -4,7 +4,9 @@ use structopt::StructOpt;
 use std::convert::{TryFrom, From};
 use std::path::PathBuf;
 use std::process::Command;
-use std::process::exit;
+
+use anyhow::{Context, Result, anyhow};
+
 use x11rb::connection::{
     Connection as _, RequestConnection
 };
@@ -129,56 +131,31 @@ fn handle_device<T: HierarchyChangeEvent<T>>(
     }
 }
 
-fn main() {
+fn main() -> Result<()> {
     let opt = Opt::from_args();
     println!("{:?}", opt);
 
-    let (conn, _) = x11rb::connect(None).unwrap_or_else(|e| {
-        eprintln!("Can't open X display: {}", e);
-        exit(1);
-    });
+    let (conn, _) = x11rb::connect(None).context("Can't open X display")?;
 
-    let xinput_info = match conn.extension_information(xinput::X11_EXTENSION_NAME) {
-        Ok(Some(info)) => info,
-        Ok(None) | Err(_) => {
-            eprintln!("X Input extension not available.");
-            exit(1);
-        }
-    };
+    let xinput_info = conn.extension_information(xinput::X11_EXTENSION_NAME)
+        .context("X Input extension cannot be detected.")?
+        .ok_or(anyhow!("X Input extension not available."))?;
 
     println!("X Input extension opcode: {}", xinput_info.major_opcode);
 
     // We don’t want to inherit an open connection into the daemon
     drop(conn);
 
-    if !opt.foreground {
-        /*
-        let daemonize = Daemonize::new()
-            .stdout(std::io::stdout())
-            .stderr(std::io::stderr())
-        ;
-        if opt.pidfile.is_some() {
-            //daemonize.pid_file(opt.pidfile.unwrap().as_path());
-        }
 
-        daemonize.start().unwrap_or_else(|e| {
-            println!("Cannot daemonize: {}", e);
-            exit(1);
-        });
-        */
-        if let Err(e) = daemon(false, opt.verbose) {
-            eprintln!("Cannot daemonize: {}", e);
-            exit(1);
-        };
+    if !opt.foreground {
+        daemon(false, opt.verbose).context("Cannot daemonize")?;
 
         println!("Daemonized.");
     }
 
     // Now that we’re in the daemon, reconnect to the X server
-    let (conn, screen_num) = x11rb::connect(None).unwrap_or_else(|e| {
-        eprintln!("Can't reconnect to the X display: {}", e);
-        exit(1);
-    });
+    let (conn, screen_num) = x11rb::connect(None)
+        .context("Can't reconnect to the X display")?;
 
     let screen = &conn.setup().roots[screen_num];
 
@@ -188,10 +165,7 @@ fn main() {
         }
 
         if let Ok(reply) = conn.xinput_xiquery_device(Device::All.into()) {
-            let reply = reply.reply().unwrap_or_else(|e| {
-                println!("Error: {}", e);
-                exit(1);
-            });
+            let reply = reply.reply()?;
             for info in reply.infos {
                 match DeviceType::try_from(info.type_).unwrap() {
                     DeviceType::MasterPointer |
@@ -212,17 +186,12 @@ fn main() {
     conn.xinput_xiselect_events(screen.root, &[EventMask {
         deviceid: Device::All.into(),
         mask: vec![XIEventMask::Hierarchy.into()]
-    }]);
+    }])?;
 
-    conn.flush();
+    conn.flush()?;
     loop {
-        let event = match conn.wait_for_event() {
-            Ok(event) => event,
-            Err(e) => {
-                eprintln!("Failed to get an event: {}", e);
-                continue;
-            }
-        };
+        let event = conn.wait_for_event()
+            .context("Failed to get an event")?;
         if event.response_type() != GE_GENERIC_EVENT {
             continue;
         }
