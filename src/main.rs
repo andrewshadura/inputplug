@@ -2,7 +2,12 @@ mod mask_iter;
 use mask_iter::IterableMask;
 use structopt::StructOpt;
 use std::convert::{TryFrom, From};
-use std::path::PathBuf;
+#[cfg(feature = "pidfile")]
+use pidfile_rs::Pidfile;
+
+#[cfg(feature = "pidfile")]
+use std::{path::PathBuf, fs::Permissions, os::unix::fs::PermissionsExt};
+
 use std::process::Command;
 
 use anyhow::{Context, Result, anyhow};
@@ -54,6 +59,7 @@ struct Opt {
     command: String,
 
     /// PID file
+    #[cfg(feature = "pidfile")]
     #[structopt(short = "p", long, parse(from_os_str))]
     pidfile: Option<PathBuf>,
 }
@@ -148,11 +154,24 @@ fn main() -> Result<()> {
     // We don’t want to inherit an open connection into the daemon
     drop(conn);
 
+    #[cfg(feature = "pidfile")]
+    let pidfile = if opt.pidfile.is_some() {
+        Some(Pidfile::new(&opt.pidfile.as_ref().unwrap(), Permissions::from_mode(0o600))?)
+    } else {
+        None
+    };
 
     if !opt.foreground {
         daemon(false, opt.verbose).context("Cannot daemonize")?;
 
         println!("Daemonized.");
+
+        #[cfg(feature = "pidfile")]
+        if pidfile.is_some() {
+            if let Err(error) = pidfile.unwrap().write() {
+                eprintln!("Failed to write to the PID file: {}", error);
+            }
+        }
     }
 
     // Now that we’re in the daemon, reconnect to the X server

@@ -9,6 +9,15 @@ structopt = { version = "0.3", default-features = false }
 libc = "0.2"
 anyhow = "1.0"
 
+[dependencies.pidfile-rs]
+git = "https://github.com/andrewshadura/bsd-pidfile-rs"
+branch = "main"
+optional = true
+
+[features]
+default = ["pidfile"]
+pidfile = ["pidfile-rs"]
+
 [dependencies.x11rb]
 version = "0.4"
 features = ["xinput"]
