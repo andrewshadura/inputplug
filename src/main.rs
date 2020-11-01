@@ -22,9 +22,11 @@ use x11rb::x11_utils::Event;
 #[derive(Debug, StructOpt)]
 #[structopt(name = "inputplug", about = "XInput event monitor.")]
 struct Opt {
+    /*
     /// Enable debug mode.
     #[structopt(long)]
     debug: bool,
+    */
 
     /// Be a bit more verbose.
     #[structopt(short, long)]
