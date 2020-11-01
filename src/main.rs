@@ -1,27 +1,27 @@
 mod mask_iter;
 use mask_iter::IterableMask;
-use structopt::StructOpt;
-use std::convert::{TryFrom, From};
 #[cfg(feature = "pidfile")]
 use pidfile_rs::Pidfile;
+use std::convert::{From, TryFrom};
+use structopt::StructOpt;
 
 #[cfg(feature = "pidfile")]
-use std::{path::PathBuf, fs::Permissions, os::unix::fs::PermissionsExt};
+use std::{fs::Permissions, os::unix::fs::PermissionsExt, path::PathBuf};
 
 use std::process::Command;
 
-use anyhow::{Context, Result, anyhow};
+use anyhow::{anyhow, Context, Result};
 
 use x11rb::connection::{
     Connection as _, RequestConnection
 };
-use x11rb::generated::xproto::GE_GENERIC_EVENT;
 use x11rb::generated::xinput::{
     self, ConnectionExt as _,
     Device, DeviceId, DeviceType, EventMask,
     HierarchyEvent, HierarchyInfo, HierarchyMask,
     XIDeviceInfo, XIEventMask
 };
+use x11rb::generated::xproto::GE_GENERIC_EVENT;
 use x11rb::x11_utils::Event;
 
 #[derive(Debug, StructOpt)]
@@ -98,7 +98,7 @@ impl<T> HierarchyChangeEvent<T> for XIDeviceInfo {
         vec![
             self.deviceid.to_string(),
             format!("XI{:?}", DeviceType::try_from(self.type_).unwrap()),
-            String::from_utf8_lossy(&self.name).to_string()
+            String::from_utf8_lossy(&self.name).to_string(),
         ]
     }
 }
@@ -114,7 +114,7 @@ impl<T> HierarchyChangeEvent<T> for HierarchyInfo {
                     panic!("Unknown device type: {}", self.type_);
                 }))
             },
-            device_name(conn, self.deviceid).unwrap_or("".to_string())
+            device_name(conn, self.deviceid).unwrap_or("".to_string()),
         ]
     }
 }
@@ -145,7 +145,8 @@ fn main() -> Result<()> {
 
     let (conn, _) = x11rb::connect(None).context("Can't open X display")?;
 
-    let xinput_info = conn.extension_information(xinput::X11_EXTENSION_NAME)
+    let xinput_info = conn
+        .extension_information(xinput::X11_EXTENSION_NAME)
         .context("X Input extension cannot be detected.")?
         .ok_or(anyhow!("X Input extension not available."))?;
 
@@ -156,7 +157,10 @@ fn main() -> Result<()> {
 
     #[cfg(feature = "pidfile")]
     let pidfile = if opt.pidfile.is_some() {
-        Some(Pidfile::new(&opt.pidfile.as_ref().unwrap(), Permissions::from_mode(0o600))?)
+        Some(Pidfile::new(
+            &opt.pidfile.as_ref().unwrap(),
+            Permissions::from_mode(0o600)
+        )?)
     } else {
         None
     };
@@ -204,10 +208,13 @@ fn main() -> Result<()> {
         }
     }
 
-    conn.xinput_xiselect_events(screen.root, &[EventMask {
-        deviceid: Device::All.into(),
-        mask: vec![XIEventMask::Hierarchy.into()]
-    }])?;
+    conn.xinput_xiselect_events(
+        screen.root,
+        &[EventMask {
+            deviceid: Device::All.into(),
+            mask: vec![XIEventMask::Hierarchy.into()],
+        }]
+    )?;
 
     conn.flush()?;
     loop {

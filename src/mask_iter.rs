@@ -15,10 +15,10 @@ macro_rules! implement_iterable_mask {
                     let bit = self.curr_mask & self.value;
                     self.curr_mask >>= 1;
                     if bit != 0 {
-                        return Some(bit)
+                        return Some(bit);
                     }
                     if self.curr_mask == 0 {
-                        break
+                        break;
                     }
                 }
                 None
@@ -33,7 +33,7 @@ macro_rules! implement_iterable_mask {
                 }
             }
         }
-    }
+    };
 }
 
 implement_iterable_mask!(u8);
