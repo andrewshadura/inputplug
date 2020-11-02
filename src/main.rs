@@ -1,5 +1,6 @@
 mod mask_iter;
 use mask_iter::IterableMask;
+use nix::unistd::daemon;
 #[cfg(feature = "pidfile")]
 use pidfile_rs::Pidfile;
 use std::convert::{From, TryFrom};
@@ -62,17 +63,6 @@ struct Opt {
     #[cfg(feature = "pidfile")]
     #[structopt(short = "p", long, parse(from_os_str))]
     pidfile: Option<PathBuf>,
-}
-
-fn daemon(nochdir: bool, noclose: bool) -> Result<(), std::io::Error> {
-    let res = unsafe {
-        libc::daemon(nochdir as libc::c_int, noclose as libc::c_int)
-    };
-    if res != 0 {
-        Err(std::io::Error::last_os_error())
-    } else {
-        Ok(())
-    }
 }
 
 trait HierarchyChangeEvent<T> {
