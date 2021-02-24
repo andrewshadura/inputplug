@@ -449,6 +449,7 @@ int main(int argc, char *argv[])
                 break;
             case XCB_INPUT_DEVICE_TYPE_SLAVE_POINTER:
             case XCB_INPUT_DEVICE_TYPE_SLAVE_KEYBOARD:
+            case XCB_INPUT_DEVICE_TYPE_FLOATING_SLAVE:
                 handle_device(info->deviceid, info->type, XISlaveAdded, name);
                 handle_device(info->deviceid, info->type, XIDeviceEnabled, name);
                 break;
