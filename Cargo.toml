@@ -10,8 +10,6 @@ nix = "0.19"
 anyhow = "1.0"
 
 [dependencies.pidfile-rs]
-git = "https://github.com/andrewshadura/bsd-pidfile-rs"
-branch = "main"
 optional = true
 
 [features]
