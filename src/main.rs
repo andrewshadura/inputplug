@@ -163,7 +163,7 @@ fn main() -> Result<()> {
         #[cfg(feature = "pidfile")]
         if pidfile.is_some() {
             if let Err(error) = pidfile.unwrap().write() {
-                eprintln!("Failed to write to the PID file: {}", error);
+                eprintln!("Failed to write to the PID file: {:?}", error);
             }
         }
     }
