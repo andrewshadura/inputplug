@@ -189,7 +189,8 @@ fn main() -> Result<()> {
                         handle_device(&opt, &conn, &info, HierarchyMask::MASTER_ADDED)
                     }
                     DeviceType::SLAVE_POINTER |
-                    DeviceType::SLAVE_KEYBOARD => {
+                    DeviceType::SLAVE_KEYBOARD |
+                    DeviceType::FLOATING_SLAVE => {
                         handle_device(&opt, &conn, &info, HierarchyMask::SLAVE_ADDED);
                         handle_device(&opt, &conn, &info, HierarchyMask::DEVICE_ENABLED)
                     }
