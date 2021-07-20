@@ -16,14 +16,14 @@ use anyhow::{anyhow, Context, Result};
 use x11rb::connection::{
     Connection as _, RequestConnection
 };
-use x11rb::generated::xinput::{
+use x11rb::protocol::Event;
+use x11rb::protocol::xinput::{
     self, ConnectionExt as _,
     Device, DeviceId, DeviceType, EventMask,
-    HierarchyEvent, HierarchyInfo, HierarchyMask,
+    HierarchyInfo, HierarchyMask,
     XIDeviceInfo, XIEventMask
 };
-use x11rb::generated::xproto::GE_GENERIC_EVENT;
-use x11rb::x11_utils::Event;
+use x11rb::protocol::xproto::GE_GENERIC_EVENT;
 
 #[derive(Debug, StructOpt)]
 #[structopt(name = "inputplug", about = "XInput event monitor.")]
@@ -70,7 +70,7 @@ trait HierarchyChangeEvent<T> {
 }
 
 fn device_name(conn: &impl RequestConnection, deviceid: DeviceId) -> Option<String> {
-    if let Ok(r) = conn.xinput_xiquery_device(deviceid) {
+    if let Ok(r) = conn.xinput_xi_query_device(deviceid) {
         if let Ok(reply) = r.reply() {
             reply.infos.iter()
                 .find(|info| info.deviceid == deviceid)
@@ -83,11 +83,19 @@ fn device_name(conn: &impl RequestConnection, deviceid: DeviceId) -> Option<Stri
     }
 }
 
+fn format_device_type(device_type: DeviceType) -> String {
+    if device_type == DeviceType::from(0u8) {
+        "".into()
+    } else {
+        format!("XI{:#?}", device_type)
+    }
+}
+
 impl<T> HierarchyChangeEvent<T> for XIDeviceInfo {
     fn to_cmdline(&self, conn: &impl RequestConnection) -> Vec<String> {
         vec![
             self.deviceid.to_string(),
-            format!("XI{:?}", DeviceType::try_from(self.type_).unwrap()),
+            format_device_type(self.type_),
             String::from_utf8_lossy(&self.name).to_string(),
         ]
     }
@@ -97,13 +105,7 @@ impl<T> HierarchyChangeEvent<T> for HierarchyInfo {
     fn to_cmdline(&self, conn: &impl RequestConnection) -> Vec<String> {
         vec![
             self.deviceid.to_string(),
-            if self.type_ == 0 {
-                "".to_string()
-            } else {
-                format!("XI{:?}", DeviceType::try_from(self.type_).unwrap_or_else(|_| {
-                    panic!("Unknown device type: {}", self.type_);
-                }))
-            },
+            format_device_type(self.type_),
             device_name(conn, self.deviceid).unwrap_or("".to_string()),
         ]
     }
@@ -117,7 +119,7 @@ fn handle_device<T: HierarchyChangeEvent<T>>(
 ) {
     let mut command = Command::new(&opt.command);
 
-    command.arg(format!("XI{:?}", change))
+    command.arg(format!("XI{:#?}", change))
            .args(device_info.to_cmdline(conn));
     if opt.verbose {
         println!("{:?}", &command);
@@ -179,18 +181,18 @@ fn main() -> Result<()> {
             println!("Bootstrapping events");
         }
 
-        if let Ok(reply) = conn.xinput_xiquery_device(Device::All.into()) {
+        if let Ok(reply) = conn.xinput_xi_query_device(bool::from(Device::ALL)) {
             let reply = reply.reply()?;
             for info in reply.infos {
                 match DeviceType::try_from(info.type_).unwrap() {
-                    DeviceType::MasterPointer |
-                    DeviceType::MasterKeyboard => {
-                        handle_device(&opt, &conn, &info, HierarchyMask::MasterAdded)
+                    DeviceType::MASTER_POINTER |
+                    DeviceType::MASTER_KEYBOARD => {
+                        handle_device(&opt, &conn, &info, HierarchyMask::MASTER_ADDED)
                     }
-                    DeviceType::SlavePointer |
-                    DeviceType::SlaveKeyboard => {
-                        handle_device(&opt, &conn, &info, HierarchyMask::SlaveAdded);
-                        handle_device(&opt, &conn, &info, HierarchyMask::DeviceEnabled)
+                    DeviceType::SLAVE_POINTER |
+                    DeviceType::SLAVE_KEYBOARD => {
+                        handle_device(&opt, &conn, &info, HierarchyMask::SLAVE_ADDED);
+                        handle_device(&opt, &conn, &info, HierarchyMask::DEVICE_ENABLED)
                     }
                     _ => {}
                 }
@@ -198,11 +200,11 @@ fn main() -> Result<()> {
         }
     }
 
-    conn.xinput_xiselect_events(
+    conn.xinput_xi_select_events(
         screen.root,
         &[EventMask {
-            deviceid: Device::All.into(),
-            mask: vec![XIEventMask::Hierarchy.into()],
+            deviceid: bool::from(Device::ALL).into(),
+            mask: vec![XIEventMask::HIERARCHY.into()],
         }]
     )?;
 
@@ -213,14 +215,15 @@ fn main() -> Result<()> {
         if event.response_type() != GE_GENERIC_EVENT {
             continue;
         }
-        if let Ok(hier_event) = HierarchyEvent::try_from(event) {
+        if let Event::XinputHierarchy(hier_event) = event {
             if hier_event.extension != xinput_info.major_opcode {
                 continue;
             }
             for info in hier_event.infos {
                 let flags = IterableMask::from(info.flags)
-                    .flat_map(HierarchyMask::try_from)
+                    .map(|x| HierarchyMask::from(x as u8))
                     .collect::<Vec<HierarchyMask>>();
+
                 for flag in flags {
                     handle_device(&opt, &conn, &info, flag);
                 }

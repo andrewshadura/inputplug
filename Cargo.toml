@@ -19,5 +19,5 @@ default = ["pidfile"]
 pidfile = ["pidfile-rs"]
 
 [dependencies.x11rb]
-version = "0.4"
+version = "0.8"
 features = ["xinput"]
