@@ -3,6 +3,9 @@ name = "inputplug"
 version = "0.4.0"
 authors = ["Andrej Shadura <andrew@shadura.me>"]
 edition = "2018"
+description = "XInput monitor daemon"
+license = "MIT"
+repository = "https://github.com/andrewshadura/inputplug"
 
 [dependencies]
 structopt = { version = "0.3", default-features = false }
