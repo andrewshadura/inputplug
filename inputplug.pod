@@ -126,7 +126,7 @@ L<xinput(1)>
 
 =head1 COPYRIGHT
 
-Copyright (C) 2013, 2014, 2018, 2020 Andrej Shadura.
+Copyright (C) 2013, 2014, 2018, 2020, 2021 Andrej Shadura.
 
 Copyright (C) 2014, 2020 Vincent Bernat.
 
