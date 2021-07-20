@@ -28,11 +28,9 @@ use x11rb::protocol::xproto::GE_GENERIC_EVENT;
 #[derive(Debug, StructOpt)]
 #[structopt(name = "inputplug", about = "XInput event monitor.")]
 struct Opt {
-    /*
     /// Enable debug mode.
     #[structopt(long)]
     debug: bool,
-    */
 
     /// Be a bit more verbose.
     #[structopt(short, long)]
@@ -133,7 +131,6 @@ fn handle_device<T: HierarchyChangeEvent<T>>(
 
 fn main() -> Result<()> {
     let opt = Opt::from_args();
-    println!("{:?}", opt);
 
     let (conn, _) = x11rb::connect(None).context("Can't open X display")?;
 
@@ -142,7 +139,9 @@ fn main() -> Result<()> {
         .context("X Input extension cannot be detected.")?
         .ok_or(anyhow!("X Input extension not available."))?;
 
-    println!("X Input extension opcode: {}", xinput_info.major_opcode);
+    if opt.debug {
+        println!("X Input extension opcode: {}", xinput_info.major_opcode);
+    }
 
     // We don’t want to inherit an open connection into the daemon
     drop(conn);
@@ -177,7 +176,7 @@ fn main() -> Result<()> {
     let screen = &conn.setup().roots[screen_num];
 
     if opt.bootstrap {
-        if opt.verbose {
+        if opt.debug {
             println!("Bootstrapping events");
         }
 
