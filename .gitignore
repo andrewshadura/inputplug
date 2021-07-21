@@ -1,3 +1,4 @@
-/inputplug
-/inputplug.1
-*.o
+/target
+Cargo.toml
+*.iml
+.idea
