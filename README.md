@@ -96,10 +96,6 @@ A summary of options is included below.
 
     X11 display to connect to.
 
-# BUGS
-
-The Rust port doesn't support WMII.
-
 # SEE ALSO
 
 [xinput(1)](http://manpages.debian.org/xinput)

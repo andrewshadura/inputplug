@@ -1,3 +1,5 @@
+// Copyright (C) 2020—2021 Andrej Shadura
+// SPDX-License-Identifier: MIT
 mod mask_iter;
 use mask_iter::IterableMask;
 use nix::unistd::daemon;
@@ -26,7 +28,7 @@ use x11rb::protocol::xinput::{
 use x11rb::protocol::xproto::GE_GENERIC_EVENT;
 
 #[derive(Debug, StructOpt)]
-#[structopt(name = "inputplug", about = "XInput event monitor.")]
+#[structopt(name = "inputplug", about = "XInput event monitor")]
 struct Opt {
     /// Enable debug mode.
     #[structopt(long)]

@@ -1,5 +1,15 @@
+// Copyright (C) 2020 Andrej Shadura
+// SPDX-License-Identifier: MIT
 use std::iter::Iterator;
 
+/// Iterate over the bits of a binary value
+///
+/// `IterableMask` is an iterator producing only the set bits
+/// of a binary value it is created from:
+/// ```rust
+/// IterableMask::from(0x81_u8).collect::<Vec<u8>>()
+/// # [0x80, 1]
+/// ```
 pub struct IterableMask<T> {
     value: T,
     curr_mask: T

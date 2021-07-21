@@ -116,10 +116,6 @@ X11 display to connect to.
 
 =back
 
-=head1 BUGS
-
-The Rust port doesn't support WMII.
-
 =head1 SEE ALSO
 
 L<xinput(1)>
