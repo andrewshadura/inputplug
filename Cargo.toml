@@ -9,7 +9,7 @@ repository = "https://github.com/andrewshadura/inputplug"
 
 [dependencies]
 structopt = { version = "0.3", default-features = false }
-nix = "0.19"
+nix = ">= 0.19, <1.0"
 anyhow = "1.0"
 
 [dependencies.pidfile-rs]
