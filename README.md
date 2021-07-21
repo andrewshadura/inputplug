@@ -83,7 +83,7 @@ A summary of options is included below.
 * **-c** _command-prefix_
 
     Command prefix to run. Unfortunately, currently this is passed to
-    [execvp(3)](http://manpages.debian.org/cgi-bin/man.cgi?query=execvp) directly, so spaces aren't allowed. This is subject to
+    [execvp(3)](http://manpages.debian.org/execvp) directly, so spaces aren't allowed. This is subject to
     change in future.
 
 * **-p** _pidfile_
@@ -102,7 +102,7 @@ The Rust port doesn't support WMII.
 
 # SEE ALSO
 
-[xinput(1)](http://manpages.debian.org/cgi-bin/man.cgi?query=xinput)
+[xinput(1)](http://manpages.debian.org/xinput)
 
 # COPYRIGHT
 
