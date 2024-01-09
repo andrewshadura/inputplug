@@ -14,7 +14,7 @@ anyhow = "1.0"
 
 [dependencies.pidfile-rs]
 optional = true
-version = "0.1"
+version = "0.2"
 
 [features]
 default = ["pidfile"]
