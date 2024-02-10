@@ -5,7 +5,7 @@ use mask_iter::IterableMask;
 use nix::unistd::daemon;
 #[cfg(feature = "pidfile")]
 use pidfile_rs::Pidfile;
-use std::convert::{From, TryFrom};
+use std::convert::From;
 use structopt::StructOpt;
 
 #[cfg(feature = "pidfile")]
@@ -15,17 +15,13 @@ use std::process::Command;
 
 use anyhow::{anyhow, Context, Result};
 
-use x11rb::connection::{
-    Connection as _, RequestConnection
-};
-use x11rb::protocol::Event;
+use x11rb::connection::{Connection as _, RequestConnection};
 use x11rb::protocol::xinput::{
-    self, ConnectionExt as _,
-    Device, DeviceId, DeviceType, EventMask,
-    HierarchyInfo, HierarchyMask,
-    XIDeviceInfo, XIEventMask
+    self, ConnectionExt as _, Device, DeviceId, DeviceType, EventMask, HierarchyInfo,
+    HierarchyMask, XIDeviceInfo, XIEventMask,
 };
 use x11rb::protocol::xproto::GE_GENERIC_EVENT;
+use x11rb::protocol::Event;
 
 #[derive(Debug, StructOpt)]
 #[structopt(name = "inputplug", about = "XInput event monitor")]
@@ -72,7 +68,9 @@ trait HierarchyChangeEvent<T> {
 fn device_name(conn: &impl RequestConnection, deviceid: DeviceId) -> Option<String> {
     if let Ok(r) = conn.xinput_xi_query_device(deviceid) {
         if let Ok(reply) = r.reply() {
-            reply.infos.iter()
+            reply
+                .infos
+                .iter()
                 .find(|info| info.deviceid == deviceid)
                 .map(|info| String::from_utf8_lossy(&info.name).to_string())
         } else {
@@ -92,7 +90,7 @@ fn format_device_type(device_type: DeviceType) -> String {
 }
 
 impl<T> HierarchyChangeEvent<T> for XIDeviceInfo {
-    fn to_cmdline(&self, conn: &impl RequestConnection) -> Vec<String> {
+    fn to_cmdline(&self, _conn: &impl RequestConnection) -> Vec<String> {
         vec![
             self.deviceid.to_string(),
             format_device_type(self.type_),
@@ -115,12 +113,13 @@ fn handle_device<T: HierarchyChangeEvent<T>>(
     opt: &Opt,
     conn: &impl RequestConnection,
     device_info: &T,
-    change: HierarchyMask
+    change: HierarchyMask,
 ) {
     let mut command = Command::new(&opt.command);
 
-    command.arg(format!("XI{:#?}", change))
-           .args(device_info.to_cmdline(conn));
+    command
+        .arg(format!("XI{:#?}", change))
+        .args(device_info.to_cmdline(conn));
     if opt.verbose {
         println!("{:?}", &command);
     }
@@ -151,8 +150,8 @@ fn main() -> Result<()> {
     #[cfg(feature = "pidfile")]
     let pidfile = if opt.pidfile.is_some() {
         Some(Pidfile::new(
-            &opt.pidfile.as_ref().unwrap(),
-            Permissions::from_mode(0o600)
+            opt.pidfile.as_ref().unwrap(),
+            Permissions::from_mode(0o600),
         )?)
     } else {
         None
@@ -172,8 +171,7 @@ fn main() -> Result<()> {
     }
 
     // Now that we’re in the daemon, reconnect to the X server
-    let (conn, screen_num) = x11rb::connect(None)
-        .context("Can't reconnect to the X display")?;
+    let (conn, screen_num) = x11rb::connect(None).context("Can't reconnect to the X display")?;
 
     let screen = &conn.setup().roots[screen_num];
 
@@ -185,14 +183,13 @@ fn main() -> Result<()> {
         if let Ok(reply) = conn.xinput_xi_query_device(bool::from(Device::ALL)) {
             let reply = reply.reply()?;
             for info in reply.infos {
-                match DeviceType::try_from(info.type_).unwrap() {
-                    DeviceType::MASTER_POINTER |
-                    DeviceType::MASTER_KEYBOARD => {
+                match info.type_ {
+                    DeviceType::MASTER_POINTER | DeviceType::MASTER_KEYBOARD => {
                         handle_device(&opt, &conn, &info, HierarchyMask::MASTER_ADDED)
                     }
-                    DeviceType::SLAVE_POINTER |
-                    DeviceType::SLAVE_KEYBOARD |
-                    DeviceType::FLOATING_SLAVE => {
+                    DeviceType::SLAVE_POINTER
+                    | DeviceType::SLAVE_KEYBOARD
+                    | DeviceType::FLOATING_SLAVE => {
                         handle_device(&opt, &conn, &info, HierarchyMask::SLAVE_ADDED);
                         handle_device(&opt, &conn, &info, HierarchyMask::DEVICE_ENABLED)
                     }
@@ -206,14 +203,13 @@ fn main() -> Result<()> {
         screen.root,
         &[EventMask {
             deviceid: bool::from(Device::ALL).into(),
-            mask: vec![XIEventMask::HIERARCHY.into()],
-        }]
+            mask: vec![XIEventMask::HIERARCHY],
+        }],
     )?;
 
     conn.flush()?;
     loop {
-        let event = conn.wait_for_event()
-            .context("Failed to get an event")?;
+        let event = conn.wait_for_event().context("Failed to get an event")?;
         if event.response_type() != GE_GENERIC_EVENT {
             continue;
         }
@@ -222,7 +218,7 @@ fn main() -> Result<()> {
                 continue;
             }
             for info in hier_event.infos {
-                let flags = IterableMask::from(info.flags)
+                let flags = IterableMask::from(info.flags.bits())
                     .map(|x| HierarchyMask::from(x as u8))
                     .collect::<Vec<HierarchyMask>>();
 
