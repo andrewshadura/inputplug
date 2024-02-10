@@ -222,7 +222,7 @@ fn main() -> Result<()> {
                 continue;
             }
             for info in hier_event.infos {
-                let flags = IterableMask::from(info.flags)
+                let flags = IterableMask::from(info.flags.bits())
                     .map(|x| HierarchyMask::from(x as u8))
                     .collect::<Vec<HierarchyMask>>();
 
