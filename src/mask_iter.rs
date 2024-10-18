@@ -38,7 +38,7 @@ macro_rules! implement_iterable_mask {
         impl From<$t> for IterableMask<$t> {
             fn from(value: $t) -> Self {
                 IterableMask {
-                    value: value,
+                    value,
                     curr_mask: <$t>::from(1u8).rotate_right(1)
                 }
             }
