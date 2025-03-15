@@ -5,7 +5,7 @@ use mask_iter::IterableMask;
 use nix::unistd::daemon;
 #[cfg(feature = "pidfile")]
 use pidfile_rs::Pidfile;
-use std::convert::{From, TryFrom};
+use std::convert::From;
 use structopt::StructOpt;
 
 #[cfg(feature = "pidfile")]
@@ -151,7 +151,7 @@ fn main() -> Result<()> {
     #[cfg(feature = "pidfile")]
     let pidfile = if opt.pidfile.is_some() {
         Some(Pidfile::new(
-            &opt.pidfile.as_ref().unwrap(),
+            opt.pidfile.as_ref().unwrap(),
             Permissions::from_mode(0o600)
         )?)
     } else {
@@ -185,7 +185,7 @@ fn main() -> Result<()> {
         if let Ok(reply) = conn.xinput_xi_query_device(bool::from(Device::ALL)) {
             let reply = reply.reply()?;
             for info in reply.infos {
-                match DeviceType::try_from(info.type_).unwrap() {
+                match DeviceType::from(info.type_) {
                     DeviceType::MASTER_POINTER |
                     DeviceType::MASTER_KEYBOARD => {
                         handle_device(&opt, &conn, &info, HierarchyMask::MASTER_ADDED)
@@ -206,7 +206,7 @@ fn main() -> Result<()> {
         screen.root,
         &[EventMask {
             deviceid: bool::from(Device::ALL).into(),
-            mask: vec![XIEventMask::HIERARCHY.into()],
+            mask: vec![XIEventMask::HIERARCHY],
         }]
     )?;
 
@@ -222,7 +222,7 @@ fn main() -> Result<()> {
                 continue;
             }
             for info in hier_event.infos {
-                let flags = IterableMask::from(info.flags)
+                let flags = IterableMask::from(u32::from(info.flags))
                     .map(|x| HierarchyMask::from(x as u8))
                     .collect::<Vec<HierarchyMask>>();
 
