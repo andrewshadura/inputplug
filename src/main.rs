@@ -6,7 +6,7 @@ use nix::unistd::daemon;
 #[cfg(feature = "pidfile")]
 use pidfile_rs::Pidfile;
 use std::convert::From;
-use structopt::StructOpt;
+use clap::StructOpt;
 
 #[cfg(feature = "pidfile")]
 use std::{fs::Permissions, os::unix::fs::PermissionsExt, path::PathBuf};
@@ -39,7 +39,7 @@ struct Opt {
     verbose: bool,
 
     /// Don't daemonize, run in the foreground.
-    #[structopt(short = "d", long)]
+    #[structopt(short = 'd', long)]
     foreground: bool,
 
     /// Start up, monitor events, but don't actually run anything.
@@ -52,16 +52,16 @@ struct Opt {
     ///
     /// A master device will trigger the "added" event while a slave
     /// device will trigger both the "added" and the "enabled" device.
-    #[structopt(short = "0", long)]
+    #[structopt(short = '0', long)]
     bootstrap: bool,
 
     /// Command prefix to run.
-    #[structopt(short = "c", long)]
+    #[structopt(short = 'c', long)]
     command: String,
 
     /// PID file
     #[cfg(feature = "pidfile")]
-    #[structopt(short = "p", long, parse(from_os_str))]
+    #[structopt(short = 'p', long, parse(from_os_str))]
     pidfile: Option<PathBuf>,
 }
 
