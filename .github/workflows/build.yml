@@ -1,0 +1,27 @@
+name: build and release
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  build_and_test:
+    name: inputplug
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: install dependencies
+        run: sudo apt-get install libbsd-dev
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+      - uses: actions-rs/cargo@v1
+        with:
+          command: build
+      - name: upload artifact to releases
+        uses: alexellis/upload-assets@0.3.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          asset_paths: '["target/debug/inputplug"]'
+
