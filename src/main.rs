@@ -183,7 +183,7 @@ fn main() -> Result<()> {
         if let Ok(reply) = conn.xinput_xi_query_device(bool::from(Device::ALL)) {
             let reply = reply.reply()?;
             for info in reply.infos {
-                match DeviceType::from(info.type_) {
+                match info.type_ {
                     DeviceType::MASTER_POINTER | DeviceType::MASTER_KEYBOARD => {
                         handle_device(&opt, &conn, &info, HierarchyMask::MASTER_ADDED)
                     }
