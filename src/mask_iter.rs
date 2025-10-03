@@ -12,7 +12,7 @@ use std::iter::Iterator;
 /// ```
 pub struct IterableMask<T> {
     value: T,
-    curr_mask: T
+    curr_mask: T,
 }
 
 macro_rules! implement_iterable_mask {
@@ -39,7 +39,7 @@ macro_rules! implement_iterable_mask {
             fn from(value: $t) -> Self {
                 IterableMask {
                     value,
-                    curr_mask: <$t>::from(1u8).rotate_right(1)
+                    curr_mask: <$t>::from(1u8).rotate_right(1),
                 }
             }
         }

@@ -9,7 +9,7 @@ repository = "https://github.com/andrewshadura/inputplug"
 
 [dependencies]
 clap = { version = "3.0", features = ["derive", "std"] }
-nix = { version = ">= 0.19, <1.0", features = ["process"] }
+nix = { version = ">= 0.24, <1.0", features = ["process"] }
 anyhow = "1.0"
 
 [dependencies.pidfile-rs]
