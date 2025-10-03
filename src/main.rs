@@ -87,7 +87,7 @@ fn format_device_type(device_type: DeviceType) -> String {
     if device_type == DeviceType::from(0u8) {
         "".into()
     } else {
-        format!("XI{:#?}", device_type)
+        format!("XI{device_type:#?}")
     }
 }
 
@@ -119,14 +119,14 @@ fn handle_device<T: HierarchyChangeEvent<T>>(
 ) {
     let mut command = Command::new(&opt.command);
 
-    command.arg(format!("XI{:#?}", change))
+    command.arg(format!("XI{change:#?}"))
            .args(device_info.to_cmdline(conn));
     if opt.verbose {
         println!("{:?}", &command);
     }
     if !opt.no_act {
         if let Err(e) = command.status() {
-            eprintln!("Command failed: {}", e);
+            eprintln!("Command failed: {e}");
         }
     }
 }
@@ -166,7 +166,7 @@ fn main() -> Result<()> {
         #[cfg(feature = "pidfile")]
         if pidfile.is_some() {
             if let Err(error) = pidfile.unwrap().write() {
-                eprintln!("Failed to write to the PID file: {:?}", error);
+                eprintln!("Failed to write to the PID file: {error:?}");
             }
         }
     }
