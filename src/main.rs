@@ -92,7 +92,7 @@ fn format_device_type(device_type: DeviceType) -> String {
 }
 
 impl<T> HierarchyChangeEvent<T> for XIDeviceInfo {
-    fn to_cmdline(&self, conn: &impl RequestConnection) -> Vec<String> {
+    fn to_cmdline(&self, _conn: &impl RequestConnection) -> Vec<String> {
         vec![
             self.deviceid.to_string(),
             format_device_type(self.type_),
