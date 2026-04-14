@@ -92,7 +92,7 @@ fn format_device_type(device_type: DeviceType) -> String {
 }
 
 impl<T> HierarchyChangeEvent<T> for XIDeviceInfo {
-    fn to_cmdline(&self, conn: &impl RequestConnection) -> Vec<String> {
+    fn to_cmdline(&self, _conn: &impl RequestConnection) -> Vec<String> {
         vec![
             self.deviceid.to_string(),
             format_device_type(self.type_),
@@ -159,7 +159,11 @@ fn main() -> Result<()> {
     };
 
     if !opt.foreground {
-        daemon(false, opt.verbose).context("Cannot daemonize")?;
+        daemon(
+            true, // nochdir: retain current directory
+            opt.verbose,
+        )
+        .context("Cannot daemonize")?;
 
         println!("Daemonized.");
 
