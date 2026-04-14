@@ -159,7 +159,11 @@ fn main() -> Result<()> {
     };
 
     if !opt.foreground {
-        daemon(false, opt.verbose).context("Cannot daemonize")?;
+        daemon(
+            true, // nochdir: retain current directory
+            opt.verbose,
+        )
+        .context("Cannot daemonize")?;
 
         println!("Daemonized.");
 
